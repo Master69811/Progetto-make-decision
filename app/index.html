@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Decision Engine — Epoca SpA</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #ffffff; --text: #1a2233; --muted: #66707f;
+    --line: #e2e5ea; --accent: #1f5fbf; --accent-soft: #e8f0fc;
+    --ok: #1e7a45; --ok-bg: #e3f3ea; --warn: #9a6700; --warn-bg: #fdf3d7;
+    --bad: #b32430; --bad-bg: #fbe7e9; --shadow: 0 1px 3px rgba(20,30,50,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151c; --card: #1c212b; --text: #e8ebf0; --muted: #98a1af;
+      --line: #2c3341; --accent: #6ea3ef; --accent-soft: #23304a;
+      --ok: #58c98a; --ok-bg: #1d3328; --warn: #e3b341; --warn-bg: #3a3120;
+      --bad: #f07884; --bad-bg: #3d2226; --shadow: 0 1px 3px rgba(0,0,0,.4);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text);
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+  header {
+    padding: 18px 16px 10px; max-width: 720px; margin: 0 auto;
+  }
+  header h1 { font-size: 1.25rem; }
+  header p { color: var(--muted); font-size: .85rem; }
+  main { max-width: 720px; margin: 0 auto; padding: 0 12px; }
+
+  nav {
+    position: fixed; bottom: 0; left: 0; right: 0; display: flex;
+    background: var(--card); border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom); z-index: 10;
+  }
+  nav button {
+    flex: 1; padding: 12px 4px; border: 0; background: none; color: var(--muted);
+    font-size: .78rem; cursor: pointer; display: flex; flex-direction: column; gap: 2px; align-items: center;
+  }
+  nav button .ico { font-size: 1.25rem; }
+  nav button.active { color: var(--accent); font-weight: 600; }
+
+  section { display: none; }
+  section.active { display: block; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px; margin: 10px 0; box-shadow: var(--shadow);
+  }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .grow { flex: 1; }
+  h2 { font-size: 1.05rem; margin: 14px 2px 4px; }
+  h3 { font-size: .95rem; }
+  .hint { color: var(--muted); font-size: .82rem; }
+
+  label { display: block; font-size: .8rem; font-weight: 600; color: var(--muted); margin: 10px 0 3px; }
+  input, textarea, select {
+    width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--bg); color: var(--text); font: inherit; font-size: .95rem;
+  }
+  textarea { min-height: 58px; resize: vertical; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+  button.btn {
+    padding: 10px 16px; border: 0; border-radius: 8px; background: var(--accent);
+    color: #fff; font: inherit; font-weight: 600; font-size: .92rem; cursor: pointer;
+  }
+  button.ghost { background: var(--accent-soft); color: var(--accent); }
+  button.mini { padding: 5px 10px; font-size: .8rem; }
+  button.danger { background: var(--bad-bg); color: var(--bad); }
+
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .74rem; font-weight: 700; }
+  .b-ok { background: var(--ok-bg); color: var(--ok); }
+  .b-warn { background: var(--warn-bg); color: var(--warn); }
+  .b-bad { background: var(--bad-bg); color: var(--bad); }
+  .b-neutro { background: var(--accent-soft); color: var(--accent); }
+
+  .dec-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; cursor: pointer; }
+  .dec-body { display: none; margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+  .card.open .dec-body { display: block; }
+  .qa { margin: 6px 0; font-size: .9rem; }
+  .qa b { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .03em; display: block; }
+  .prio { font-size: .78rem; font-weight: 700; }
+
+  .kpi-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
+  .kpi-row:last-child { border-bottom: 0; }
+  .kpi-val { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+  .day { margin: 12px 0 4px; font-size: .82rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .task { display: flex; gap: 10px; align-items: flex-start; padding: 8px 2px; border-bottom: 1px solid var(--line); }
+  .task input[type=checkbox] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--accent); }
+  .task.done .t-text { text-decoration: line-through; color: var(--muted); }
+  .t-cli { font-size: .76rem; color: var(--accent); font-weight: 700; }
+
+  dialog {
+    border: 0; border-radius: 14px; padding: 0; max-width: 560px; width: calc(100% - 24px);
+    background: var(--card); color: var(--text); box-shadow: 0 12px 40px rgba(0,0,0,.3);
+  }
+  dialog::backdrop { background: rgba(10,14,20,.55); }
+  .dlg-in { padding: 16px; max-height: 82vh; overflow-y: auto; }
+  .dlg-in h3 { margin-bottom: 2px; }
+  .steps { color: var(--muted); font-size: .78rem; margin-bottom: 8px; }
+  .dlg-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 16px; }
+
+  .fab-bar { display: flex; gap: 8px; margin: 12px 0; }
+  .empty { text-align: center; color: var(--muted); padding: 26px 10px; font-size: .9rem; }
+  .range-row { display: flex; align-items: center; gap: 10px; }
+  .range-row input[type=range] { flex: 1; accent-color: var(--accent); }
+  .range-row output { font-weight: 700; min-width: 1.2em; text-align: center; }
+  pre.export {
+    white-space: pre-wrap; font-size: .78rem; background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px; max-height: 40vh; overflow: auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚙️ Decision Engine</h1>
+  <p>Pianificazione &amp; produzione · Epoca SpA · logica Lean: analizza → decidi → esegui → refactoring</p>
+</header>
+
+<main>
+  <!-- ============ DECISIONI ============ -->
+  <section id="sec-decisioni" class="active">
+    <div class="fab-bar">
+      <button class="btn" onclick="apriWizard()">＋ Nuova decisione</button>
+      <button class="btn ghost" onclick="apriExport()">📋 Esporta per Claude</button>
+    </div>
+    <p class="hint">Le criticità sono ordinate per priorità = urgenza × impatto. Sotto 4 punti: delega o rimanda (Muda di tempo manageriale).</p>
+    <div id="lista-decisioni"></div>
+  </section>
+
+  <!-- ============ KPI ============ -->
+  <section id="sec-kpi">
+    <div class="fab-bar">
+      <button class="btn" onclick="apriKpiDlg()">＋ Nuovo KPI</button>
+    </div>
+    <p class="hint">Stato automatico: <span class="badge b-ok">OK</span> a target · <span class="badge b-warn">Attenzione</span> entro il 5% · <span class="badge b-bad">Fuori</span> oltre. Tocca un KPI per aggiornare il valore.</p>
+    <div class="card" id="lista-kpi"></div>
+  </section>
+
+  <!-- ============ SETTIMANA ============ -->
+  <section id="sec-settimana">
+    <div class="card">
+      <label for="t-testo">Attività / ordine</label>
+      <input id="t-testo" placeholder="Es. Chiudere lotto 4512 su Linea 2">
+      <div class="row">
+        <div class="grow">
+          <label for="t-cliente">Cliente (opz.)</label>
+          <input id="t-cliente" placeholder="Mesto, Davines…">
+        </div>
+        <div class="grow">
+          <label for="t-giorno">Giorno</label>
+          <select id="t-giorno"></select>
+        </div>
+      </div>
+      <div style="margin-top:10px"><button class="btn" onclick="aggiungiTask()">Aggiungi al piano</button>
+      <button class="btn ghost mini" onclick="pulisciFatte()">Pulisci completate</button></div>
+    </div>
+    <div id="lista-settimana"></div>
+  </section>
+
+  <!-- ============ SISTEMA ============ -->
+  <section id="sec-sistema">
+    <div class="card">
+      <h3>Backup e dati</h3>
+      <p class="hint">I dati vivono solo su questo dispositivo (localStorage). Esporta un backup prima di cambiare telefono o browser.</p>
+      <div class="fab-bar">
+        <button class="btn ghost" onclick="backupJson()">⬇️ Esporta backup</button>
+        <button class="btn ghost" onclick="document.getElementById('file-import').click()">⬆️ Importa backup</button>
+        <input type="file" id="file-import" accept=".json" hidden onchange="importaJson(this)">
+      </div>
+      <button class="btn danger mini" onclick="azzeraTutto()">Azzera tutti i dati</button>
+    </div>
+    <div class="card">
+      <h3>Come funziona con Claude</h3>
+      <p class="hint" style="margin-top:6px">
+        1. Registra qui criticità, KPI e piano durante la giornata.<br>
+        2. Quando serve ragionare, tocca <b>Esporta per Claude</b>: ottieni un prompt con lo stato attuale già formattato.<br>
+        3. Incollalo in una chat del repo <b>Progetto-make-decision</b>: la Decision Engine (CLAUDE.md) risponde con decisione, piano ed eventuale refactoring.<br>
+        4. Riporta qui la decisione presa e chiudi la criticità.
+      </p>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button id="nav-decisioni" class="active" onclick="vai('decisioni')"><span class="ico">🎯</span>Decisioni</button>
+  <button id="nav-kpi" onclick="vai('kpi')"><span class="ico">📈</span>KPI</button>
+  <button id="nav-settimana" onclick="vai('settimana')"><span class="ico">🗓️</span>Settimana</button>
+  <button id="nav-sistema" onclick="vai('sistema')"><span class="ico">🛠️</span>Sistema</button>
+</nav>
+
+<!-- ============ WIZARD 4 DOMANDE ============ -->
+<dialog id="dlg-wizard">
+  <form class="dlg-in" method="dialog" onsubmit="return salvaDecisione(event)">
+    <h3 id="wiz-titolo-dlg">Nuova decisione</h3>
+    <p class="steps">Protocollo: Obiettivo → Vincoli → Dati → Opzioni. Compila quello che sai, il resto lo chiedi a Claude.</p>
+    <input type="hidden" id="w-id">
+    <label for="w-titolo">Titolo criticità *</label>
+    <input id="w-titolo" required placeholder="Es. Ritardo materia prima per ordine Mesto">
+    <div class="row">
+      <div class="grow">
+        <label for="w-ambito">Ambito</label>
+        <select id="w-ambito">
+          <option>Produzione</option><option>Logistica</option><option>KPI</option>
+          <option>Personale</option><option>Cliente</option><option>Altro</option>
+        </select>
+      </div>
+      <div class="grow">
+        <label for="w-stato">Stato</label>
+        <select id="w-stato">
+          <option value="aperta">Aperta</option><option value="decisa">Decisa</option>
+          <option value="eseguita">Eseguita</option><option value="verificata">Verificata</option>
+        </select>
+      </div>
+    </div>
+    <label>1 · Obiettivo — cosa vuoi ottenere e come misuri il successo?</label>
+    <textarea id="w-obiettivo"></textarea>
+    <label>2 · Vincoli — cosa non è negoziabile?</label>
+    <textarea id="w-vincoli"></textarea>
+    <label>3 · Dati — numeri da ERP/MES, ordini, giacenze</label>
+    <textarea id="w-dati"></textarea>
+    <label>4 · Opzioni — alternative sul tavolo</label>
+    <textarea id="w-opzioni"></textarea>
+    <label>Urgenza (quanto presto va deciso)</label>
+    <div class="range-row"><input type="range" id="w-urgenza" min="1" max="5" value="3" oninput="this.nextElementSibling.value=this.value"><output>3</output></div>
+    <label>Impatto (su consegne, costi, KPI)</label>
+    <div class="range-row"><input type="range" id="w-impatto" min="1" max="5" value="3" oninput="this.nextElementSibling.value=this.value"><output>3</output></div>
+    <label>Decisione presa (quando c'è)</label>
+    <textarea id="w-decisione"></textarea>
+    <label>Refactoring — cosa cambia perché non si ripresenti</label>
+    <textarea id="w-refactoring"></textarea>
+    <div class="dlg-actions">
+      <button type="button" class="btn ghost" onclick="document.getElementById('dlg-wizard').close()">Annulla</button>
+      <button class="btn" type="submit">Salva</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============ DIALOG KPI ============ -->
+<dialog id="dlg-kpi">
+  <form class="dlg-in" method="dialog" onsubmit="return salvaKpi(event)">
+    <h3>KPI</h3>
+    <input type="hidden" id="k-id">
+    <label for="k-nome">Nome *</label>
+    <input id="k-nome" required placeholder="Es. OTD, OEE Linea 2, Rotazione magazzino">
+    <div class="row">
+      <div class="grow">
+        <label for="k-direzione">Obiettivo</label>
+        <select id="k-direzione"><option value=">=">≥ almeno</option><option value="<=">≤ al massimo</option></select>
+      </div>
+      <div class="grow">
+        <label for="k-target">Target *</label>
+        <input id="k-target" required type="number" step="any" placeholder="95">
+      </div>
+      <div class="grow">
+        <label for="k-valore">Valore attuale</label>
+        <input id="k-valore" type="number" step="any" placeholder="92.5">
+      </div>
+    </div>
+    <label for="k-unita">Unità</label>
+    <input id="k-unita" placeholder="%, pz/h, giorni…">
+    <div class="dlg-actions">
+      <button type="button" class="btn ghost" onclick="document.getElementById('dlg-kpi').close()">Annulla</button>
+      <span class="row">
+        <button type="button" class="btn danger mini" id="k-del" onclick="eliminaKpi()">Elimina</button>
+        <button class="btn" type="submit">Salva</button>
+      </span>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============ DIALOG EXPORT ============ -->
+<dialog id="dlg-export">
+  <div class="dlg-in">
+    <h3>Prompt per Claude</h3>
+    <p class="steps">Copia e incolla in una chat del repo Progetto-make-decision. La Decision Engine risponde con decisione, piano e refactoring.</p>
+    <pre class="export" id="export-testo"></pre>
+    <div class="dlg-actions">
+      <button class="btn ghost" onclick="document.getElementById('dlg-export').close()">Chiudi</button>
+      <button class="btn" onclick="copiaExport(this)">Copia negli appunti</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+"use strict";
+const GIORNI = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
+const KEY = "decision-engine-epoca-v1";
+const $ = id => document.getElementById(id);
+
+let db = carica();
+function carica() {
+  try { return Object.assign({ decisioni: [], kpi: [], settimana: [] }, JSON.parse(localStorage.getItem(KEY) || "{}")); }
+  catch { return { decisioni: [], kpi: [], settimana: [] }; }
+}
+function salva() { localStorage.setItem(KEY, JSON.stringify(db)); }
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const esc = s => (s || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+/* ---------- navigazione ---------- */
+function vai(tab) {
+  document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+  $("sec-" + tab).classList.add("active");
+  $("nav-" + tab).classList.add("active");
+}
+
+/* ---------- decisioni ---------- */
+function prioInfo(d) {
+  const p = d.urgenza * d.impatto;
+  if (p >= 16) return { p, label: "Decidi oggi", cls: "b-bad" };
+  if (p >= 9)  return { p, label: "Questa settimana", cls: "b-warn" };
+  if (p >= 4)  return { p, label: "Programma", cls: "b-neutro" };
+  return { p, label: "Delega / rimanda", cls: "b-ok" };
+}
+const STATO_BADGE = { aperta: "b-bad", decisa: "b-warn", eseguita: "b-neutro", verificata: "b-ok" };
+
+function renderDecisioni() {
+  const box = $("lista-decisioni");
+  if (!db.decisioni.length) {
+    box.innerHTML = '<div class="card empty">Nessuna criticità registrata.<br>Parti da “＋ Nuova decisione”: le 4 domande sono già il modulo.</div>';
+    return;
+  }
+  const ordinate = [...db.decisioni].sort((a, b) => {
+    const chiuseA = +(a.stato === "verificata"), chiuseB = +(b.stato === "verificata");
+    return chiuseA - chiuseB || prioInfo(b).p - prioInfo(a).p;
+  });
+  box.innerHTML = ordinate.map(d => {
+    const pr = prioInfo(d);
+    const qa = [["Obiettivo", d.obiettivo], ["Vincoli", d.vincoli], ["Dati", d.dati], ["Opzioni", d.opzioni],
+                ["Decisione presa", d.decisione], ["Refactoring", d.refactoring]]
+      .filter(([, v]) => v)
+      .map(([k, v]) => `<div class="qa"><b>${k}</b>${esc(v)}</div>`).join("") ||
+      '<p class="hint">Nessun dettaglio ancora: apri la scheda con ✏️ e compila le 4 domande.</p>';
+    return `<div class="card" id="dec-${d.id}">
+      <div class="dec-head" onclick="this.parentElement.classList.toggle('open')">
+        <div class="grow">
+          <h3>${esc(d.titolo)}</h3>
+          <span class="hint">${esc(d.ambito)} · ${d.creata}</span>
+        </div>
+        <div style="text-align:right">
+          <span class="badge ${STATO_BADGE[d.stato]}">${d.stato}</span><br>
+          <span class="prio badge ${pr.cls}" title="urgenza ${d.urgenza} × impatto ${d.impatto}">P${pr.p} · ${pr.label}</span>
+        </div>
+      </div>
+      <div class="dec-body">
+        ${qa}
+        <div class="row" style="margin-top:8px">
+          <button class="btn ghost mini" onclick="apriWizard('${d.id}')">✏️ Modifica</button>
+          <button class="btn ghost mini" onclick="esportaUna('${d.id}')">📋 Chiedi a Claude</button>
+          <button class="btn danger mini" onclick="eliminaDecisione('${d.id}')">Elimina</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function apriWizard(id) {
+  const d = db.decisioni.find(x => x.id === id) || {};
+  $("wiz-titolo-dlg").textContent = id ? "Modifica decisione" : "Nuova decisione";
+  $("w-id").value = id || "";
+  $("w-titolo").value = d.titolo || "";
+  $("w-ambito").value = d.ambito || "Produzione";
+  $("w-stato").value = d.stato || "aperta";
+  for (const f of ["obiettivo", "vincoli", "dati", "opzioni", "decisione", "refactoring"]) $("w-" + f).value = d[f] || "";
+  for (const f of ["urgenza", "impatto"]) {
+    $("w-" + f).value = d[f] || 3;
+    $("w-" + f).nextElementSibling.value = d[f] || 3;
+  }
+  $("dlg-wizard").showModal();
+}
+function salvaDecisione(e) {
+  e.preventDefault();
+  const id = $("w-id").value;
+  const dati = {
+    titolo: $("w-titolo").value.trim(), ambito: $("w-ambito").value, stato: $("w-stato").value,
+    obiettivo: $("w-obiettivo").value.trim(), vincoli: $("w-vincoli").value.trim(),
+    dati: $("w-dati").value.trim(), opzioni: $("w-opzioni").value.trim(),
+    decisione: $("w-decisione").value.trim(), refactoring: $("w-refactoring").value.trim(),
+    urgenza: +$("w-urgenza").value, impatto: +$("w-impatto").value
+  };
+  if (id) Object.assign(db.decisioni.find(x => x.id === id), dati);
+  else db.decisioni.push(Object.assign({ id: uid(), creata: new Date().toISOString().slice(0, 10) }, dati));
+  salva(); renderDecisioni();
+  $("dlg-wizard").close();
+  return false;
+}
+function eliminaDecisione(id) {
+  if (!confirm("Eliminare questa decisione dal registro?")) return;
+  db.decisioni = db.decisioni.filter(x => x.id !== id);
+  salva(); renderDecisioni();
+}
+
+/* ---------- KPI ---------- */
+function statoKpi(k) {
+  if (k.valore === null || k.valore === undefined || k.valore === "") return { cls: "b-neutro", label: "n.d." };
+  const v = +k.valore, t = +k.target, margine = Math.abs(t) * 0.05;
+  const okDir = k.direzione === ">=" ? v >= t : v <= t;
+  if (okDir) return { cls: "b-ok", label: "OK" };
+  const vicino = k.direzione === ">=" ? v >= t - margine : v <= t + margine;
+  return vicino ? { cls: "b-warn", label: "Attenzione" } : { cls: "b-bad", label: "Fuori target" };
+}
+function renderKpi() {
+  const box = $("lista-kpi");
+  if (!db.kpi.length) {
+    box.innerHTML = '<div class="empty">Nessun KPI. Aggiungi OTD, OEE, rotazione magazzino…</div>';
+    return;
+  }
+  box.innerHTML = db.kpi.map(k => {
+    const s = statoKpi(k);
+    return `<div class="kpi-row" onclick="apriKpiDlg('${k.id}')" style="cursor:pointer">
+      <div class="grow"><b>${esc(k.nome)}</b><br>
+        <span class="hint">target ${k.direzione === ">=" ? "≥" : "≤"} ${k.target}${esc(k.unita || "")}</span></div>
+      <div class="kpi-val">${k.valore !== "" && k.valore !== null && k.valore !== undefined ? k.valore + esc(k.unita || "") : "—"}</div>
+      <span class="badge ${s.cls}">${s.label}</span>
+    </div>`;
+  }).join("");
+}
+function apriKpiDlg(id) {
+  const k = db.kpi.find(x => x.id === id) || {};
+  $("k-id").value = id || "";
+  $("k-nome").value = k.nome || "";
+  $("k-direzione").value = k.direzione || ">=";
+  $("k-target").value = k.target ?? "";
+  $("k-valore").value = k.valore ?? "";
+  $("k-unita").value = k.unita || "";
+  $("k-del").style.display = id ? "" : "none";
+  $("dlg-kpi").showModal();
+}
+function salvaKpi(e) {
+  e.preventDefault();
+  const id = $("k-id").value;
+  const dati = {
+    nome: $("k-nome").value.trim(), direzione: $("k-direzione").value,
+    target: $("k-target").value, valore: $("k-valore").value, unita: $("k-unita").value.trim()
+  };
+  if (id) Object.assign(db.kpi.find(x => x.id === id), dati);
+  else db.kpi.push(Object.assign({ id: uid() }, dati));
+  salva(); renderKpi();
+  $("dlg-kpi").close();
+  return false;
+}
+function eliminaKpi() {
+  const id = $("k-id").value;
+  if (!id || !confirm("Eliminare questo KPI?")) return;
+  db.kpi = db.kpi.filter(x => x.id !== id);
+  salva(); renderKpi();
+  $("dlg-kpi").close();
+}
+
+/* ---------- settimana ---------- */
+function renderSettimana() {
+  const box = $("lista-settimana");
+  if (!db.settimana.length) {
+    box.innerHTML = '<div class="card empty">Piano vuoto. Aggiungi le attività della settimana qui sopra.</div>';
+    return;
+  }
+  box.innerHTML = GIORNI.map(g => {
+    const tasks = db.settimana.filter(t => t.giorno === g);
+    if (!tasks.length) return "";
+    return `<div class="card"><div class="day">${g}</div>` + tasks.map(t => `
+      <div class="task ${t.fatto ? "done" : ""}">
+        <input type="checkbox" ${t.fatto ? "checked" : ""} onchange="toggleTask('${t.id}')">
+        <div class="grow">
+          ${t.cliente ? `<span class="t-cli">${esc(t.cliente)}</span><br>` : ""}
+          <span class="t-text">${esc(t.testo)}</span>
+        </div>
+        <button class="btn danger mini" onclick="eliminaTask('${t.id}')">✕</button>
+      </div>`).join("") + "</div>";
+  }).join("");
+}
+function aggiungiTask() {
+  const testo = $("t-testo").value.trim();
+  if (!testo) return;
+  db.settimana.push({ id: uid(), testo, cliente: $("t-cliente").value.trim(), giorno: $("t-giorno").value, fatto: false });
+  $("t-testo").value = ""; $("t-cliente").value = "";
+  salva(); renderSettimana();
+}
+function toggleTask(id) {
+  const t = db.settimana.find(x => x.id === id);
+  t.fatto = !t.fatto;
+  salva(); renderSettimana();
+}
+function eliminaTask(id) {
+  db.settimana = db.settimana.filter(x => x.id !== id);
+  salva(); renderSettimana();
+}
+function pulisciFatte() {
+  db.settimana = db.settimana.filter(x => !x.fatto);
+  salva(); renderSettimana();
+}
+
+/* ---------- export per Claude ---------- */
+function testoDecisione(d) {
+  const pr = prioInfo(d);
+  let t = `### ${d.titolo} [${d.ambito} · stato: ${d.stato} · priorità P${pr.p} (urgenza ${d.urgenza} × impatto ${d.impatto})]\n`;
+  if (d.obiettivo)   t += `1. Obiettivo: ${d.obiettivo}\n`;
+  if (d.vincoli)     t += `2. Vincoli: ${d.vincoli}\n`;
+  if (d.dati)        t += `3. Dati: ${d.dati}\n`;
+  if (d.opzioni)     t += `4. Opzioni: ${d.opzioni}\n`;
+  if (d.decisione)   t += `Decisione già presa: ${d.decisione}\n`;
+  if (d.refactoring) t += `Refactoring previsto: ${d.refactoring}\n`;
+  return t;
+}
+function buildExport(soloId) {
+  const oggi = new Date().toLocaleDateString("it-IT");
+  let t = `/decisione — Stato operativo dal mio Decision Engine (${oggi}).\n`;
+  t += `Applica il protocollo: per ogni criticità aperta dammi decisione raccomandata, piano di esecuzione, rischi/piano B e refactoring. Chiedimi solo le informazioni mancanti delle 4 domande.\n\n`;
+
+  const aperte = db.decisioni
+    .filter(d => (soloId ? d.id === soloId : d.stato !== "verificata"))
+    .sort((a, b) => prioInfo(b).p - prioInfo(a).p);
+  t += `## Criticità (${aperte.length})\n`;
+  t += aperte.length ? aperte.map(testoDecisione).join("\n") : "Nessuna criticità aperta.\n";
+
+  if (!soloId) {
+    const critici = db.kpi.map(k => ({ k, s: statoKpi(k) })).filter(x => x.s.label !== "OK" && x.s.label !== "n.d.");
+    if (critici.length) {
+      t += `\n## KPI non a target\n`;
+      t += critici.map(({ k, s }) => `- ${k.nome}: ${k.valore}${k.unita || ""} vs target ${k.direzione === ">=" ? "≥" : "≤"} ${k.target}${k.unita || ""} → ${s.label}`).join("\n") + "\n";
+    }
+    const residuo = db.settimana.filter(x => !x.fatto);
+    if (residuo.length) {
+      t += `\n## Piano settimana ancora aperto\n`;
+      t += residuo.map(x => `- ${x.giorno}: ${x.cliente ? "[" + x.cliente + "] " : ""}${x.testo}`).join("\n") + "\n";
+    }
+  }
+  return t;
+}
+function apriExport(soloId) {
+  $("export-testo").textContent = buildExport(soloId);
+  $("dlg-export").showModal();
+}
+function esportaUna(id) { apriExport(id); }
+function copiaExport(btn) {
+  navigator.clipboard.writeText($("export-testo").textContent).then(() => {
+    btn.textContent = "✓ Copiato";
+    setTimeout(() => { btn.textContent = "Copia negli appunti"; }, 1600);
+  }).catch(() => alert("Copia non riuscita: seleziona il testo e copia manualmente."));
+}
+
+/* ---------- backup ---------- */
+function backupJson() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "decision-engine-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importaJson(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const dati = JSON.parse(reader.result);
+      if (!dati.decisioni || !dati.kpi || !dati.settimana) throw new Error("formato non valido");
+      db = dati; salva(); renderTutto();
+      alert("Backup importato.");
+    } catch { alert("File non valido: serve un backup esportato da questa app."); }
+    input.value = "";
+  };
+  reader.readAsText(file);
+}
+function azzeraTutto() {
+  if (!confirm("Azzerare TUTTI i dati (decisioni, KPI, piano)? Operazione irreversibile.")) return;
+  db = { decisioni: [], kpi: [], settimana: [] };
+  salva(); renderTutto();
+}
+
+/* ---------- init ---------- */
+function renderTutto() { renderDecisioni(); renderKpi(); renderSettimana(); }
+$("t-giorno").innerHTML = GIORNI.map(g => `<option>${g}</option>`).join("");
+if (!localStorage.getItem(KEY)) {
+  db.kpi = [
+    { id: uid(), nome: "OTD (On-Time Delivery)", direzione: ">=", target: "95", valore: "", unita: "%" },
+    { id: uid(), nome: "OEE linee", direzione: ">=", target: "78", valore: "", unita: "%" }
+  ];
+  salva();
+}
+renderTutto();
+</script>
+</body>
+</html>
