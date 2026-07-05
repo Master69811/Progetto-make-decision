@@ -208,6 +208,7 @@
       <p class="hint" style="margin-bottom:10px">Un tasto = una funzione. Ogni tasto prepara il prompt con lo stato attuale già dentro, pronto da copiare nella chat Claude del repo.</p>
       <div class="cmd-grid">
         <button type="button" data-action="comando" data-cmd="decisione"><span class="cmd-t">🎯 Decidi criticità</span><span class="cmd-d">le 4 domande sulle criticità aperte</span></button>
+        <button type="button" data-action="comando" data-cmd="lancio"><span class="cmd-t">📎 Lancio OP</span><span class="cmd-d">piano ottimizzato dal CSV ordini</span></button>
         <button type="button" data-action="comando" data-cmd="pianifica"><span class="cmd-t">🗓️ Pianifica settimana</span><span class="cmd-d">piano di produzione con i dati attuali</span></button>
         <button type="button" data-action="comando" data-cmd="kpi"><span class="cmd-t">📈 Rivedi KPI</span><span class="cmd-d">stato, cause e azioni correttive</span></button>
         <button type="button" data-action="comando" data-cmd="refactoring"><span class="cmd-t">🔁 Refactoring</span><span class="cmd-d">perché il problema non torni</span></button>
@@ -705,6 +706,9 @@ function comando(tipo) {
   let t = "";
   switch (tipo) {
     case "decisione": t = buildExport(); break;
+    case "lancio":
+      t = `/lancio-op — Genera il piano di produzione della settimana dal CSV che allego/incollo qui sotto.\n\nApplica le regole di contesto/regole-pianificazione.md:\n- accorpa OP per famiglia o descrizione simile con date consegna entro 2 giorni (anticipando, mai ritardando)\n- massimo 2 OP OBI (ordini quadro scorta, art. 26707 e 26708) a settimana, come riempitivo\n\nDammi: piano per giorno, accorpamenti fatti, OBI inserite/slittate, criticità.\n\n[ALLEGA O INCOLLA QUI IL CSV DEGLI OP]`;
+      break;
     case "pianifica":
       t = `/pianifica-settimana — Stato attuale dal mio Decision Engine.\n\n## Agenda ancora aperta\n${pianoTxt}\n\n## Criticità aperte\n${db.decisioni.filter(d => d.stato === "aperta").map(testoDecisione).join("\n") || "Nessuna."}\n\n## KPI\n${kpiTxt}\n\nChiedimi solo ciò che manca (ordini, capacità, assenze), poi costruisci il piano.`;
       break;

@@ -44,6 +44,7 @@ Le decisioni significative vanno archiviate in `decisioni/` usando `decisioni/TE
 
 - `/decisione` — attiva il protocollo delle 4 domande su una nuova criticità.
 - `/pianifica-settimana` — costruisce il piano settimanale di produzione.
+- `/lancio-op` — genera il piano settimana ottimizzato dal CSV degli ordini di produzione, con le regole vincolanti di `contesto/regole-pianificazione.md` (accorpamenti entro 2 giorni per famiglia, max 2 OP OBI/settimana).
 - `/kpi` — revisione rapida dei KPI e azioni correttive.
 - `/refactoring-processo` — post-mortem di un problema chiuso e miglioramento del processo.
 - `/comunica` — scrive email e messaggi con la voce dell'utente (guida: `contesto/stile.md`).

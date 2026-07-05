@@ -24,7 +24,8 @@ Le altre slide del carosello sono adattate così al lavoro di produzione:
 | `CLAUDE.md` | **Il cervello.** Il system prompt della Decision Engine: si attiva da solo in ogni sessione Claude aperta su questo repo — non serve più incollarlo. |
 | `contesto/profilo.md` | **La memoria fissa.** Ruolo, clienti (Mesto, Davines…), sistemi ERP/MES, KPI e vincoli ricorrenti. Compilarlo una volta = non rispiegare mai il contesto (riduzione token). |
 | `contesto/stile.md` | **La tua voce.** Guida di stile per email e messaggi: `/comunica` la usa per scrivere come te. |
-| `.claude/skills/` | **I comandi:** `/decisione`, `/pianifica-settimana`, `/kpi`, `/refactoring-processo`, `/comunica`, `/comunicazioni-batch`, `/audit-sistema`. |
+| `.claude/skills/` | **I comandi:** `/decisione`, `/pianifica-settimana`, `/lancio-op` (piano da CSV), `/kpi`, `/refactoring-processo`, `/comunica`, `/comunicazioni-batch`, `/audit-sistema`. |
+| `contesto/regole-pianificazione.md` | **Le regole di lancio OP.** Accorpamenti, vincoli OBI, formato CSV appreso: si aggiornano qui, mai rispiegate in chat. |
 | `decisioni/` | **Il registro.** Ogni decisione chiusa diventa un file da `TEMPLATE.md`: è la memoria storica del sistema. |
 
 ## Come si usa
