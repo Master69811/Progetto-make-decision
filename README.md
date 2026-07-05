@@ -7,14 +7,24 @@ Sistema operativo decisionale per pianificazione e gestione produzione (Epoca Sp
 
 Il risultato non è una to-do list: è uno strumento che elabora le variabili del lavoro (priorità = urgenza × impatto, stato KPI automatico) e si aggancia a Claude per la parte di ragionamento.
 
+Le altre slide del carosello sono adattate così al lavoro di produzione:
+
+| Slide | Idea originale | Qui diventa |
+|---|---|---|
+| 2 | Clone che scrive come te | `contesto/stile.md` + `/comunica`: email a clienti e messaggi ai capiturno con la tua voce, sottoposti ad approvazione |
+| 3 | 100 lead con agente ricercatore + controllo | `/comunicazioni-batch`: solleciti fornitori e aggiornamenti clienti in lotto, ogni affermazione verificata sui dati |
+| 4 | Voto sul setup AI | `/audit-sistema`: pagella periodica del sistema, con l'unica modifica che rende di più |
+| 8 | Sistema operativo agentico | Tab **Plancia** nell'app: report mattutino, skill come pulsanti a un clic, log di ogni sessione |
+
 ## Cosa c'è nel repo
 
 | Percorso | Cosa fa |
 |---|---|
-| `app/index.html` | **L'app operativa.** Un solo file, funziona offline e da telefono, dati salvati sul dispositivo (localStorage). Registro decisioni con le 4 domande, priorità automatica, KPI con stato OK/Attenzione/Fuori target, piano settimanale, backup JSON. |
+| `app/index.html` | **L'app operativa (la plancia di comando).** Un solo file, funziona offline e da telefono, dati salvati sul dispositivo (localStorage). Tab **Plancia** con report giornaliero automatico, comandi a un clic e log sessioni; registro decisioni con le 4 domande, priorità automatica, KPI con stato OK/Attenzione/Fuori target, piano settimanale, guida di stile, backup JSON. |
 | `CLAUDE.md` | **Il cervello.** Il system prompt della Decision Engine: si attiva da solo in ogni sessione Claude aperta su questo repo — non serve più incollarlo. |
 | `contesto/profilo.md` | **La memoria fissa.** Ruolo, clienti (Mesto, Davines…), sistemi ERP/MES, KPI e vincoli ricorrenti. Compilarlo una volta = non rispiegare mai il contesto (riduzione token). |
-| `.claude/skills/` | **I comandi:** `/decisione`, `/pianifica-settimana`, `/kpi`, `/refactoring-processo`. |
+| `contesto/stile.md` | **La tua voce.** Guida di stile per email e messaggi: `/comunica` la usa per scrivere come te. |
+| `.claude/skills/` | **I comandi:** `/decisione`, `/pianifica-settimana`, `/kpi`, `/refactoring-processo`, `/comunica`, `/comunicazioni-batch`, `/audit-sistema`. |
 | `decisioni/` | **Il registro.** Ogni decisione chiusa diventa un file da `TEMPLATE.md`: è la memoria storica del sistema. |
 
 ## Come si usa
