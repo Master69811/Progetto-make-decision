@@ -31,11 +31,21 @@
 3. Poi la sequenza per famiglia (minimizzare i cambi).
 4. Poi il riempimento con OBI.
 
-## Formato CSV appreso
+## Formato CSV/XLSX appreso
 
-- [Da compilare al primo lancio: colonne riconosciute e loro significato,
-  così i lanci successivi non richiedono conferme.]
+**Estrazione ERP completa (es. `conf2_*.csv`, separatore `;`)** — colonne chiave:
+- `numop` = numero OP; `codart`/`desart` = codice/descrizione articolo; `desgru` = famiglia
+- `dataimpegnocommessa`, `dtscap`, `datcon` = possibili date di consegna cliente (usare la prima valorizzata, in quest'ordine)
+- `datric` = data richiesta/generazione (per calcolare la scadenza kanban a 10gg quando manca la consegna)
+- `qtaop` = quantità; `tempores`/`TEMPOTEO` = tempo fase in formato `"Xh Y' Z\""` (sommare tutte le fasi dello stesso OP)
+- `cellaancoratadescr` = linea; `descli`/`cliimp` = cliente; `criticitamancanti` = flag componenti mancanti (>0 = criticità)
+- OBI: `codart` contiene `26707` o `26708`
+
+**Foglio di sequenza reparto (es. `Schedulazione_reparto_*.xlsx`)** — formato minimale usato dal reparto per la propria sequenza:
+- Colonne: `Sequenza` (ordine proposto dal reparto) · `Data consegna` (fascia larga, es. "06-08/07", spesso vuota) · `OP` (numero) · `Descrizione` (famiglia sintetica, es. "TEC 5/7/10", "P.ZAINO")
+- Non contiene quantità, cliente, date precise: **incrociare per numero OP con l'ultima estrazione ERP disponibile** per recuperare data di consegna reale, cliente, criticità mancanti. Se l'estrazione ERP non è disponibile, chiedere questi dati prima di costruire il piano.
+- La sequenza/raggruppamento del reparto in questo foglio riflette la loro logica di produzione (spesso per famiglia, indipendentemente dalla distanza tra le date reali) e va sempre confrontata con la regola dei 2gg: se il reparto raggruppa OP con consegne lontane nel tempo, segnalarlo come scostamento da validare, non applicarlo in automatico.
 
 ## Prossime regole
 
-- [aggiungere qui man mano che emergono]
+- [In attesa di risposta di Andrea: se il reparto raggruppa volutamente per famiglia oltre i 2gg (per saturare con materiale pronto), va formalizzata un'eccezione alla regola di accorpamento ("libero entro la settimana di reparto" invece di "max 2gg"), oppure resta un'anticipazione da autorizzare caso per caso?]

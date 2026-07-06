@@ -254,7 +254,7 @@
         <h1 id="saluto">Buongiorno, Andrea</h1>
         <p class="hint" id="sottotitolo-data"></p>
       </div>
-      <button class="btn" type="button" data-action="comando" data-cmd="decisione">⚡ Decidi criticità</button>
+      <button class="btn" type="button" data-action="decidi-criticita">⚡ Decidi criticità</button>
     </header>
 
     <main>
@@ -266,7 +266,7 @@
           <div class="col-main">
             <div class="card">
               <div class="card-head"><h2>Comandi a un clic</h2><span class="hint">un tasto = un prompt pronto da incollare in Claude</span></div>
-              <button class="cmd-hero" type="button" data-action="comando" data-cmd="decisione">
+              <button class="cmd-hero" type="button" data-action="decidi-criticita">
                 <span class="cmd-hero-ico">⚡</span>
                 <span class="grow"><span class="cmd-t">Decidi criticità</span><span class="cmd-d">le 4 domande sulla decisione a priorità più alta</span></span>
                 <span class="badge b-ok" id="badge-consigliato" style="display:none">CONSIGLIATO ORA</span>
@@ -889,6 +889,9 @@ function calcolaPerformance() {
   box.innerHTML = html;
   ultimoPerf = { op, cella, qta, prodh, tmes, nop, standard, tUnit, tTeo, perf, delta, staffMsg };
   logEvento("Performance cella calcolata: " + (cella || op || "-") + ` (${perf.toFixed(0)}%)`);
+  sincronizzaPerformanceLog();
+  salva();
+  renderBadgeSidebar();
 }
 function promptPerformance() {
   if (!ultimoPerf) { alert("Prima calcola i valori con “Calcola”."); return; }
@@ -953,6 +956,62 @@ function buildReport() {
   return t;
 }
 
+/* ---------- performance cella → KPI globali / report / decisioni aperte ----------
+   Ogni "Performance cella calcolata: [cella] ([%])" nel log alimenta lo stato
+   globale della plancia: soglia 85-115% = in target; sotto/sopra = fuori target;
+   sotto 50% = critico → apre in automatico una decisione e finisce nel report. */
+const PERF_LOG_RE = /^Performance cella calcolata: (.+?) \((\d+)%\)$/;
+function ultimiPerfPerCella() {
+  const map = new Map();
+  for (const e of db.log) {
+    const m = PERF_LOG_RE.exec(e.m);
+    if (!m) continue;
+    const cella = m[1].trim();
+    map.set(cella.toLowerCase(), { cella, perf: +m[2], quando: e.q });
+  }
+  return [...map.values()];
+}
+function statoPerfCella(perf) {
+  if (perf < 50) return { cls: "b-bad", label: "Critico" };
+  if (perf < 85) return { cls: "b-warn", label: "Sotto target" };
+  if (perf > 115) return { cls: "b-warn", label: "Anomalia" };
+  return { cls: "b-ok", label: "In target" };
+}
+function idAutoPerf(cella) { return "perf-" + cella.toLowerCase().replace(/[^a-z0-9]+/g, "-"); }
+function sincronizzaPerformanceLog() {
+  for (const c of ultimiPerfPerCella()) {
+    const id = idAutoPerf(c.cella);
+    const esistente = db.decisioni.find(d => d.id === id);
+    const critico = c.perf < 50;
+    if (critico) {
+      const titolo = `${c.cella} fuori target: Performance registrata al ${c.perf}%`;
+      const dati = `Performance cella ${c.cella}: ${c.perf}% (rilevato ${c.quando}). Soglia critica <50%. Verificare blocco flusso o mancata chiusura parziale MES.`;
+      if (esistente) {
+        if (esistente.stato === "aperta") { esistente.titolo = titolo; esistente.dati = dati; }
+      } else {
+        db.decisioni.push({
+          id, creata: new Date().toISOString().slice(0, 10), titolo, ambito: "Produzione", stato: "aperta",
+          obiettivo: `Riportare ${c.cella} sopra l'85% di performance`, vincoli: "", dati, opzioni: "",
+          decisione: "", refactoring: "", urgenza: 5, impatto: 4, auto: true
+        });
+      }
+    } else if (esistente && esistente.auto && esistente.stato === "aperta") {
+      db.decisioni = db.decisioni.filter(d => d.id !== id); // rientrata sopra soglia: ritiro la decisione automatica
+    }
+  }
+}
+function decidiCriticita() {
+  const top = [...db.decisioni].filter(d => d.stato === "aperta").sort((a, b) => prioInfo(b).p - prioInfo(a).p)[0];
+  if (top && top.auto) {
+    const m = /al (\d+)%/.exec(top.titolo);
+    mostraPrompt(`/performance-cella — Criticità aperta dalla Plancia.\n\n${top.titolo}\n${top.dati}\n\nDammi: causa più probabile del Muda e le prime 3 azioni per riportare la cella sopra target${m ? ` (attualmente ${m[1]}%)` : ""}. Se il problema è ricorrente sulla stessa cella, proponi anche il refactoring di processo.`);
+    logEvento("Prompt mirato preparato: " + top.titolo);
+  } else {
+    mostraPrompt(buildExport(top ? top.id : undefined));
+    logEvento("Comando preparato: decisione" + (top ? " → " + top.titolo : ""));
+  }
+}
+
 /* ---------- widget solo desktop: saluto, tessere riepilogo, coda priorità, badge sidebar ---------- */
 function renderSaluto() {
   const ora = new Date().getHours();
@@ -967,12 +1026,18 @@ function renderSummary() {
   const aperte = db.decisioni.filter(d => d.stato === "aperta");
   const critiche = aperte.filter(d => prioInfo(d).p >= 16).length;
   const kpiFuori = db.kpi.filter(k => statoKpi(k).label === "Fuori target" || statoKpi(k).label === "Attenzione");
+  const celle = ultimiPerfPerCella();
+  const celleFuori = celle.filter(c => c.perf < 85 || c.perf > 115);
+  const fuoriTot = kpiFuori.length + celleFuori.length;
+  const totTot = db.kpi.length + celle.length;
   const oggiTasks = db.settimana.filter(t => t.giorno === giornoOggi());
   const oggiFatte = oggiTasks.filter(t => t.fatto).length;
   const pctOggi = oggiTasks.length ? Math.round(oggiFatte / oggiTasks.length * 100) : 0;
   const ultimo = db.log[db.log.length - 1];
   const topDecisione = [...aperte].sort((a, b) => prioInfo(b).p - prioInfo(a).p)[0];
   const worstKpi = kpiFuori[0];
+  const worstCella = [...celleFuori].sort((a, b) => Math.abs(a.perf - 100) - Math.abs(b.perf - 100)).reverse()[0];
+  const sottotitoloKpi = worstKpi ? esc(worstKpi.nome) : (worstCella ? `${esc(worstCella.cella)} ${worstCella.perf}%` : "tutti a target");
 
   $("summary-grid").innerHTML = `
     <div class="tile ${critiche ? "t-bad" : "t-brand"}">
@@ -980,10 +1045,10 @@ function renderSummary() {
       <div class="tile-val">${aperte.length}${critiche ? `<small style="color:var(--bad)">${critiche} critica${critiche > 1 ? "" : ""}</small>` : ""}</div>
       <div class="tile-sub">${topDecisione ? esc(topDecisione.titolo) : "nessuna criticità aperta"}</div>
     </div>
-    <div class="tile ${kpiFuori.length ? "t-warn" : "t-ok"}">
+    <div class="tile ${fuoriTot ? "t-warn" : "t-ok"}">
       <div class="tile-lbl">KPI fuori target</div>
-      <div class="tile-val">${kpiFuori.length}<small>/${db.kpi.length}</small></div>
-      <div class="tile-sub">${worstKpi ? esc(worstKpi.nome) : "tutti a target"}</div>
+      <div class="tile-val">${fuoriTot}<small>/${totTot}</small></div>
+      <div class="tile-sub">${sottotitoloKpi}</div>
     </div>
     <div class="tile t-ok">
       <div class="tile-lbl">Agenda di oggi</div>
@@ -1014,14 +1079,16 @@ function renderCoda() {
 function renderBadgeSidebar() {
   const aperte = db.decisioni.filter(d => d.stato === "aperta").length;
   const kpiFuori = db.kpi.filter(k => statoKpi(k).label === "Fuori target" || statoKpi(k).label === "Attenzione").length;
+  const celleFuori = ultimiPerfPerCella().filter(c => c.perf < 85 || c.perf > 115).length;
   $("badge-decisioni").textContent = aperte || "";
-  $("badge-kpi").textContent = kpiFuori || "";
+  $("badge-kpi").textContent = (kpiFuori + celleFuori) || "";
 }
 function renderStorageSize() {
   const bytes = new Blob([JSON.stringify(db)]).size;
   $("storage-size").textContent = `Dati locali · ${(bytes / 1024).toFixed(1)} KB`;
 }
 function renderPlancia() {
+  sincronizzaPerformanceLog();
   $("report-testo").textContent = buildReport();
   renderLog();
   renderSaluto();
@@ -1110,6 +1177,7 @@ function importaJson(input) {
 
 const AZIONI = {
   "tab":               el => vai(el.dataset.tab),
+  "decidi-criticita":  () => decidiCriticita(),
   "copia-report":      el => { copiaTesto($("report-testo").textContent, el, "Copia report"); logEvento("Report giornaliero copiato"); },
   "comando":           el => comando(el.dataset.cmd),
   "svuota-log":        () => { db.log = []; salva(); renderLog(); },
