@@ -407,7 +407,7 @@
         <input id="p-prodh" required type="number" step="any" inputmode="decimal" placeholder="347">
       </div>
     </div>
-    <label for="p-tmes">Tempo effettivo MES (min tot.) *</label>
+    <label for="p-tmes">Tempo Linea Totale — MES (min tot.) *</label>
     <input id="p-tmes" required type="number" step="any" inputmode="decimal" placeholder="Somma tutti gli intervalli">
     <div class="row">
       <div class="grow">
@@ -775,7 +775,7 @@ function promptPerformance() {
   if (!ultimoPerf) { alert("Prima calcola i valori con “Calcola”."); return; }
   const d = ultimoPerf;
   const staffTxt = d.nop && d.standard ? `\nStaffing: ${d.nop} operatori attivi vs standard ${d.standard} → ${d.staffMsg}` : "";
-  const t = `/performance-cella — Dati già calcolati dalla Decision Engine, approfondisci solo la diagnosi (non rifare la matematica).\n\nOP: ${d.op || "-"}\nCella: ${d.cella || "-"}\nQuantità richiesta: ${d.qta} PZ\nProd. oraria prevista: ${d.prodh} PZ/h\nTempo effettivo MES: ${d.tmes} min\nNumero operatori: ${d.nop ?? "non indicato"}${staffTxt}\n\nCalcolato: tempo teorico ${d.tTeo.toFixed(1)} min, performance ${d.perf.toFixed(1)}%, delta ${d.delta.toFixed(1)} min.\n\nDammi: causa più probabile dello scostamento e l'alert decisionale in una frase diretta. Se performance <60% o ricorrente sulla stessa cella, proponi di aprire /decisione.`;
+  const t = `/performance-cella — Dati già calcolati dalla Decision Engine, approfondisci solo la diagnosi (non rifare la matematica).\n\nOP: ${d.op || "-"}\nCella: ${d.cella || "-"}\nQuantità richiesta: ${d.qta} PZ\nProd. oraria prevista: ${d.prodh} PZ/h\nTempo Linea Totale (MES): ${d.tmes} min\nNumero operatori: ${d.nop ?? "non indicato"}${staffTxt}\n\nCalcolato: tempo teorico ${d.tTeo.toFixed(1)} min, performance ${d.perf.toFixed(1)}%, delta ${d.delta.toFixed(1)} min.\n\nDammi: causa più probabile dello scostamento e l'alert decisionale in una frase diretta. Se performance <60% o ricorrente sulla stessa cella, proponi di aprire /decisione.`;
   mostraPrompt(t);
   logEvento("Prompt approfondimento performance cella");
 }

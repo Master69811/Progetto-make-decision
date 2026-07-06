@@ -16,7 +16,7 @@ Estrai da OD (ordine di produzione) e MES (o chiedi se mancano, in un unico mess
 - Numero operatori in cella (se non indicato, chiedilo — serve per il calcolo ore-uomo; senza, salta quella parte)
 - Quantità richiesta da OP (PZ)
 - Produzione oraria prevista da OD (PZ/ora)
-- Tempo effettivo di linea da MES (minuti totali) — se il MES mostra più intervalli inizio/fine per lo stesso OP/fase, SOMMALI tutti (non prendere solo l'ultimo)
+- Tempo Linea Totale da MES (minuti totali) — è il campo "tempo linea totale" del MES — se il MES mostra più intervalli inizio/fine per lo stesso OP/fase, SOMMALI tutti (non prendere solo l'ultimo)
 
 ## 2. Calcoli (formule esatte, arrotonda solo alla fine)
 
@@ -48,7 +48,7 @@ Incrocia con `contesto/profilo.md` e buon senso Lean per la causa più probabile
 ## 4. Output (pronto per i widget della dashboard)
 
 1. **RIEPILOGO FLASH**: OP · Cella · Performance %
-2. **TEMPI**: teorico · effettivo MES · delta (in minuti, con segno)
+2. **TEMPI**: teorico · Tempo Linea Totale (MES) · delta (in minuti, con segno)
 3. **IMPATTO PRODUTTIVO**: pezzi persi/guadagnati · ore-uomo in eccesso/risparmiate
 4. **BILANCIAMENTO**: ore-uomo teoriche vs effettive
 5. **ALERT DECISIONALE**: una frase diretta, senza giri di parole (es. "La linea ha impiegato 3 volte il tempo previsto: verificare mancato carico pezzi su MES o fermo su AP1.")

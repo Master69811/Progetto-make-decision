@@ -2,195 +2,221 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="color-scheme" content="light dark">
-<title>Decision Engine — Epoca SpA</title>
+<meta name="viewport" content="width=1280">
+<title>Decision Engine — Epoca SpA (postazione ufficio)</title>
 <style>
-  /* ==================== DESIGN TOKENS ==================== */
+  /* ==================== DESIGN TOKENS — palette Epoca (da Claude Design) ====================
+     Pagina pensata SOLO per la postazione PC in ufficio (schermo largo, mouse).
+     Da telefono usare app/index.html (board) o app/classic.html (liste). */
   :root {
-    --bg: #f2f4f7; --surface: #ffffff; --surface-2: #f7f8fa;
-    --ink: #17202e; --muted: #5c6675; --line: #e3e7ed;
-    --brand: #24589f; --brand-ink: #1c4680; --brand-soft: #e9f0fa;
-    --ok: #17724a; --ok-soft: #e2f3ea;
+    --bg: #f8fafc; --surface: #ffffff; --surface-2: #eef3f9;
+    --ink: #12365f; --muted: #7d8fa2; --line: #e3e9f1;
+    --brand: #1d4f91; --brand-ink: #12365f; --brand-soft: #e7effa; --brand-dark: #173f75;
+    --ok: #4e7a1e; --ok-soft: #eef6e2;
     --warn: #8a5c00; --warn-soft: #faf0d4;
-    --bad: #b3261e; --bad-soft: #fbe8e6;
-    --shadow: 0 1px 2px rgba(23,32,46,.06), 0 4px 14px rgba(23,32,46,.05);
-    --r-lg: 16px; --r-md: 12px; --r-sm: 9px;
+    --bad: #c0392b; --bad-soft: #fdecea;
+    --shadow: 0 1px 2px rgba(18,54,95,.06), 0 4px 16px rgba(18,54,95,.06);
+    --r-lg: 14px; --r-md: 10px; --r-sm: 8px;
     --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #10141b; --surface: #1a212c; --surface-2: #151b24;
-      --ink: #e9edf3; --muted: #94a0b0; --line: #2b3442;
-      --brand: #7aacf0; --brand-ink: #a5c8f5; --brand-soft: #223349;
-      --ok: #5fcd94; --ok-soft: #1c3428;
-      --warn: #e8bb52; --warn-soft: #383018;
-      --bad: #f28b84; --bad-soft: #3e2320;
-      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 4px 14px rgba(0,0,0,.3);
-    }
-  }
-
   * { box-sizing: border-box; margin: 0; }
-  html { -webkit-text-size-adjust: 100%; }
   body {
-    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-    background: var(--bg); color: var(--ink);
-    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    font: 14.5px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: var(--bg); color: var(--ink); min-width: 1180px;
   }
-  main, header { max-width: 960px; margin: 0 auto; }
-  header { padding: var(--s4) var(--s4) var(--s2); }
-  header h1 { font-size: 1.3rem; font-weight: 800; letter-spacing: -.02em; }
-  header h1 span { color: var(--brand); }
-  header p { color: var(--muted); font-size: .8rem; margin-top: 2px; }
-  main { padding: 0 var(--s3); }
-
-  /* ==================== NAVIGAZIONE ==================== */
-  nav {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
-    display: flex; background: var(--surface); border-top: 1px solid var(--line);
-    padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -2px 12px rgba(0,0,0,.05);
-  }
-  nav button {
-    flex: 1; min-height: 56px; padding: 8px 2px; border: 0; background: none;
-    color: var(--muted); font: inherit; font-size: .72rem; font-weight: 600;
-    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px;
-    -webkit-tap-highlight-color: transparent;
-  }
-  nav button .ico { font-size: 1.3rem; line-height: 1; }
-  nav button[aria-selected="true"] { color: var(--brand); }
-  nav button[aria-selected="true"] .ico { transform: translateY(-1px); }
-
-  section[role="tabpanel"] { display: none; }
-  section[role="tabpanel"].active { display: block; animation: fadein .18s ease; }
-  @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { section[role="tabpanel"].active { animation: none; } }
-
-  /* ==================== COMPONENTI ==================== */
-  .card {
-    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
-    padding: var(--s4); margin: var(--s3) 0; box-shadow: var(--shadow);
-  }
-  .card-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s2); margin-bottom: var(--s2); }
-  h2 { font-size: 1rem; font-weight: 750; letter-spacing: -.01em; }
-  h3 { font-size: .95rem; font-weight: 700; }
-  .hint { color: var(--muted); font-size: .8rem; }
+  h1, h2, h3 { color: var(--ink); }
+  .hint { color: var(--muted); font-size: .82rem; }
   .row { display: flex; gap: var(--s2); align-items: center; flex-wrap: wrap; }
   .grow { flex: 1; min-width: 0; }
 
+  /* ==================== SHELL: sidebar + contenuto ==================== */
+  .shell { display: flex; min-height: 100vh; }
+  .sidebar {
+    flex: 0 0 248px; background: var(--surface); border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; padding: var(--s4); position: sticky; top: 0; height: 100vh;
+  }
+  .brand { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s1) var(--s4); }
+  .brand-mark {
+    width: 38px; height: 38px; border-radius: var(--r-md); background: var(--brand-soft);
+    display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex: none;
+  }
+  .brand-name { font-weight: 800; font-size: .95rem; }
+  .brand-sub { font-size: .74rem; color: var(--muted); }
+
+  .sidebar nav { display: flex; flex-direction: column; gap: 2px; }
+  .sidebar nav button {
+    display: flex; align-items: center; gap: var(--s2); border: 0; background: none; text-align: left;
+    padding: 10px var(--s2); border-radius: var(--r-md); color: var(--ink); font: inherit; font-weight: 600;
+    font-size: .88rem; cursor: pointer; width: 100%;
+  }
+  .sidebar nav button:hover { background: var(--surface-2); }
+  .sidebar nav button[aria-selected="true"] { background: var(--brand); color: #fff; }
+  .sidebar nav button .ico { font-size: 1.05rem; width: 20px; text-align: center; }
+  .nav-badge {
+    margin-left: auto; background: var(--bad); color: #fff; font-size: .68rem; font-weight: 800;
+    border-radius: 999px; padding: 1px 7px; min-width: 18px; text-align: center;
+  }
+  .sidebar nav button[aria-selected="true"] .nav-badge { background: rgba(255,255,255,.28); }
+  .nav-badge:empty { display: none; }
+
+  .sidebar-foot { margin-top: auto; display: flex; flex-direction: column; gap: var(--s2); }
+  .status-pill { background: var(--ok-soft); color: var(--ok); border-radius: var(--r-md); padding: var(--s2) var(--s3); font-size: .76rem; font-weight: 700; line-height: 1.4; }
+  .status-pill span { color: var(--muted); font-weight: 600; }
+  .profile-card { display: flex; align-items: center; gap: var(--s2); padding: var(--s2); border-top: 1px solid var(--line); }
+  .profile-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .8rem; flex: none; }
+  .profile-card b { font-size: .84rem; }
+
+  .content { flex: 1; padding: var(--s5) 32px; max-width: 1400px; }
+  .top-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--s4); gap: var(--s3); }
+  .top-header h1 { font-size: 1.3rem; font-weight: 800; letter-spacing: -.01em; }
+
+  section[role="tabpanel"] { display: none; }
+  section[role="tabpanel"].active { display: block; }
+
+  /* ==================== COMPONENTI CONDIVISI (stessi nomi classe dell'app mobile) ==================== */
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+    padding: var(--s4); margin: 0 0 var(--s3); box-shadow: var(--shadow);
+  }
+  .card-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s2); margin-bottom: var(--s2); }
+  h2 { font-size: .98rem; font-weight: 750; }
+  h3 { font-size: .92rem; font-weight: 700; }
+
   button.btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    min-height: 44px; padding: 0 var(--s4); border: 0; border-radius: var(--r-md);
-    background: var(--brand); color: #fff; font: inherit; font-size: .9rem; font-weight: 700;
-    cursor: pointer; -webkit-tap-highlight-color: transparent; transition: filter .12s;
+    min-height: 38px; padding: 0 var(--s4); border: 0; border-radius: var(--r-md);
+    background: var(--brand); color: #fff; font: inherit; font-size: .87rem; font-weight: 700;
+    cursor: pointer; transition: filter .12s;
   }
-  button.btn:active { filter: brightness(.88); }
+  button.btn:hover { filter: brightness(.94); }
   button.ghost { background: var(--brand-soft); color: var(--brand-ink); }
   button.danger { background: var(--bad-soft); color: var(--bad); }
-  button.mini { min-height: 34px; padding: 0 var(--s3); font-size: .8rem; border-radius: var(--r-sm); }
-  button.icon-only { min-width: 34px; padding: 0; }
-  button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
-    outline: 2px solid var(--brand); outline-offset: 1px;
-  }
+  button.mini { min-height: 30px; padding: 0 var(--s3); font-size: .78rem; border-radius: var(--r-sm); }
+  button.icon-only { min-width: 30px; padding: 0; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
 
-  label { display: block; font-size: .74rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: var(--s3) 0 var(--s1); }
+  label { display: block; font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: var(--s3) 0 var(--s1); }
   input, textarea, select {
-    width: 100%; min-height: 42px; padding: 9px 11px; border: 1.5px solid var(--line);
-    border-radius: var(--r-sm); background: var(--surface-2); color: var(--ink);
-    font: inherit; font-size: .92rem;
+    width: 100%; min-height: 38px; padding: 8px 10px; border: 1.5px solid var(--line);
+    border-radius: var(--r-sm); background: var(--surface-2); color: var(--ink); font: inherit; font-size: .88rem;
   }
-  textarea { min-height: 60px; resize: vertical; }
+  textarea { min-height: 56px; resize: vertical; }
 
-  .badge {
-    display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px;
-    font-size: .72rem; font-weight: 800; letter-spacing: .01em; white-space: nowrap;
-  }
+  .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: .7rem; font-weight: 800; white-space: nowrap; }
   .b-ok { background: var(--ok-soft); color: var(--ok); }
   .b-warn { background: var(--warn-soft); color: var(--warn); }
   .b-bad { background: var(--bad-soft); color: var(--bad); }
   .b-brand { background: var(--brand-soft); color: var(--brand-ink); }
+  .empty { text-align: center; color: var(--muted); padding: var(--s5) var(--s3); font-size: .85rem; }
 
-  .empty { text-align: center; color: var(--muted); padding: var(--s5) var(--s3); font-size: .88rem; }
-
-  /* ==================== PLANCIA ==================== */
   pre.mono {
-    white-space: pre-wrap; word-break: break-word; font: .78rem/1.55 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm);
-    padding: var(--s3); overflow: auto;
+    white-space: pre-wrap; word-break: break-word; font: .76rem/1.55 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--s3); overflow: auto;
   }
-  .cmd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
-  .cmd-grid button {
-    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
-    min-height: 62px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: var(--r-md);
-    background: var(--surface-2); color: var(--ink); font: inherit; text-align: left; cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .cmd-grid button:active { background: var(--brand-soft); }
-  .cmd-grid .cmd-t { font-weight: 750; font-size: .84rem; }
-  .cmd-grid .cmd-d { font-size: .7rem; color: var(--muted); }
-  .log-item { display: flex; gap: var(--s2); padding: 7px 0; border-bottom: 1px solid var(--line); font-size: .8rem; }
+  .log-item { display: flex; gap: var(--s2); padding: 7px 0; border-bottom: 1px solid var(--line); font-size: .78rem; }
   .log-item:last-child { border-bottom: 0; }
   .log-item time { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-  /* ==================== BOARD STILE TRELLO ==================== */
-  .board-toolbar { margin: var(--s3) 0; }
-  .board-row {
-    display: flex; gap: var(--s3); overflow-x: auto; padding: 2px 2px var(--s3);
-    -webkit-overflow-scrolling: touch;
+  /* ==================== PLANCIA DESKTOP: tessere + 2 colonne ==================== */
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s3); margin-bottom: var(--s3); }
+  .tile {
+    background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--line);
+    border-radius: var(--r-md); padding: var(--s3) var(--s4); box-shadow: var(--shadow);
   }
+  .tile-lbl { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .tile-val { font-size: 1.6rem; font-weight: 800; margin-top: 4px; }
+  .tile-val small { font-size: .78rem; font-weight: 700; margin-left: 6px; }
+  .tile-sub { font-size: .76rem; color: var(--muted); margin-top: 2px; }
+  .tile-bar { height: 4px; border-radius: 99px; background: var(--line); margin-top: 8px; overflow: hidden; }
+  .tile-bar i { display: block; height: 100%; background: var(--ok); }
+  .tile.t-bad { border-left-color: var(--bad); }
+  .tile.t-warn { border-left-color: var(--warn); }
+  .tile.t-ok { border-left-color: var(--ok); }
+  .tile.t-brand { border-left-color: var(--brand); }
+
+  .plancia-grid { display: grid; grid-template-columns: 1fr 340px; gap: var(--s4); align-items: start; }
+
+  .cmd-hero {
+    display: flex; align-items: center; gap: var(--s3); width: 100%; text-align: left;
+    background: var(--brand-dark); color: #fff; border: 0; border-radius: var(--r-md);
+    padding: var(--s3) var(--s4); cursor: pointer; margin-bottom: var(--s3); font: inherit;
+  }
+  .cmd-hero:hover { filter: brightness(1.06); }
+  .cmd-hero-ico { font-size: 1.3rem; }
+  .cmd-hero .cmd-t { font-size: .95rem; font-weight: 800; display: block; }
+  .cmd-hero .cmd-d { font-size: .78rem; color: #cfe0f7; display: block; margin-top: 1px; }
+  .cmd-hero .badge { margin-left: auto; }
+
+  .cmd-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); }
+  .cmd-grid button {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+    min-height: 66px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: var(--r-md);
+    background: var(--surface-2); color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+  }
+  .cmd-grid button:hover { background: var(--brand-soft); border-color: var(--brand-soft); }
+  .cmd-grid .cmd-t { font-weight: 750; font-size: .82rem; }
+  .cmd-grid .cmd-d { font-size: .7rem; color: var(--muted); }
+
+  .coda-item {
+    display: flex; align-items: center; gap: var(--s3); padding: 9px 0; border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .coda-item:last-child { border-bottom: 0; }
+  .coda-item:hover .coda-t { color: var(--brand); }
+  .coda-p {
+    flex: none; width: 30px; height: 30px; border-radius: var(--r-sm); display: flex; align-items: center;
+    justify-content: center; font-weight: 800; font-size: .78rem; background: var(--bad-soft); color: var(--bad);
+  }
+  .coda-t { font-weight: 700; font-size: .84rem; }
+  .coda-sub { font-size: .72rem; color: var(--muted); }
+
+  /* ==================== BOARD STILE TRELLO (Decisioni / Agenda / KPI) ==================== */
+  .board-toolbar { margin: 0 0 var(--s3); }
+  .board-row { display: flex; gap: var(--s3); overflow-x: auto; padding: 2px 2px var(--s3); }
   .board-col {
-    flex: 0 0 82%; max-width: 300px; display: flex; flex-direction: column;
+    flex: 0 0 270px; display: flex; flex-direction: column;
     background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-lg);
-    max-height: calc(100vh - 250px); transition: outline-color .12s, background .12s;
+    max-height: calc(100vh - 260px); transition: outline-color .12s, background .12s;
   }
-  @media (min-width: 620px) { .board-col { flex: 0 0 260px; } }
   .board-col.today { border-color: var(--brand); }
   .board-col-head {
     padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;
     border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface-2);
     border-radius: var(--r-lg) var(--r-lg) 0 0; z-index: 1;
   }
-  .board-col-head span:first-child { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .board-col-head span:first-child { font-size: .76rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
   .board-col.today .board-col-head span:first-child { color: var(--brand); }
-  .board-col-count { font-size: .7rem; font-weight: 700; color: var(--muted); background: var(--surface); border-radius: 999px; padding: 1px 8px; }
+  .board-col-count { font-size: .68rem; font-weight: 700; color: var(--muted); background: var(--surface); border-radius: 999px; padding: 1px 8px; }
   .board-col-body { padding: var(--s2); overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: var(--s2); min-height: 64px; }
   .board-col.drop-target { outline: 2px dashed var(--brand); outline-offset: -2px; background: var(--brand-soft); }
   .board-empty { padding: var(--s3) var(--s1); text-align: center; }
 
-  .kcard {
-    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
-    padding: 10px 11px; box-shadow: var(--shadow); touch-action: none; cursor: grab;
-  }
-  .kcard[data-coll="kpi"] { cursor: default; touch-action: auto; }
+  .kcard { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px 11px; box-shadow: var(--shadow); cursor: grab; }
+  .kcard[data-coll="kpi"] { cursor: default; }
   .kcard.kcard-source { opacity: .3; }
-  .kcard-ghost { position: fixed; z-index: 100; pointer-events: none; transform: rotate(1.5deg); box-shadow: 0 14px 32px rgba(0,0,0,.28); opacity: .96; }
-  .kcard-title { font-weight: 700; font-size: .87rem; }
-  .kcard-meta { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+  .kcard-ghost { position: fixed; z-index: 100; pointer-events: none; transform: rotate(1.5deg); box-shadow: 0 14px 32px rgba(18,54,95,.28); opacity: .96; }
+  .kcard-title { font-weight: 700; font-size: .85rem; }
+  .kcard-meta { font-size: .7rem; color: var(--muted); margin-top: 2px; }
   .kcard-actions { display: flex; gap: 6px; margin-top: 8px; }
   .kcard .badge { margin-top: 7px; }
   .kcard.kcard-done .kcard-title { text-decoration: line-through; color: var(--muted); }
-  .t-cli { display: inline-block; font-size: .68rem; font-weight: 800; color: var(--brand-ink); background: var(--brand-soft); border-radius: 5px; padding: 1px 6px; margin-bottom: 4px; }
-  .kpi-val { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1rem; margin-top: 4px; }
+  .t-cli { display: inline-block; font-size: .66rem; font-weight: 800; color: var(--brand-ink); background: var(--brand-soft); border-radius: 5px; padding: 1px 6px; margin-bottom: 4px; }
+  .kpi-val { font-variant-numeric: tabular-nums; font-weight: 800; font-size: .98rem; margin-top: 4px; }
 
-  .day-chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px; -webkit-overflow-scrolling: touch; }
+  .day-chips { display: flex; gap: 6px; flex-wrap: wrap; }
   .day-chips button {
-    flex: 0 0 auto; min-height: 38px; padding: 0 13px; border: 1.5px solid var(--line);
-    border-radius: 999px; background: var(--surface-2); color: var(--ink);
-    font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+    flex: 0 0 auto; min-height: 34px; padding: 0 12px; border: 1.5px solid var(--line);
+    border-radius: 999px; background: var(--surface-2); color: var(--ink); font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer;
   }
   .day-chips button[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: #fff; }
 
   .range-row { display: flex; align-items: center; gap: var(--s3); }
   .range-row input[type=range] { flex: 1; min-height: auto; padding: 0; border: 0; background: none; accent-color: var(--brand); }
-  .range-row output { font-weight: 800; min-width: 1.4em; text-align: center; font-size: 1.05rem; color: var(--brand-ink); }
+  .range-row output { font-weight: 800; min-width: 1.4em; text-align: center; font-size: 1rem; color: var(--brand-ink); }
 
   /* ==================== DIALOG ==================== */
-  dialog {
-    border: 0; border-radius: var(--r-lg); padding: 0; max-width: 560px; width: calc(100% - 24px);
-    background: var(--surface); color: var(--ink); box-shadow: 0 16px 48px rgba(0,0,0,.35);
-  }
-  dialog::backdrop { background: rgba(8,12,18,.55); }
+  dialog { border: 0; border-radius: var(--r-lg); padding: 0; max-width: 600px; width: calc(100% - 24px); background: var(--surface); color: var(--ink); box-shadow: 0 16px 48px rgba(18,54,95,.3); }
+  dialog::backdrop { background: rgba(15,25,45,.45); }
   dialog.fallback-open { display: block; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 50; }
   .dlg-in { padding: var(--s4); max-height: 84vh; overflow-y: auto; }
   .dlg-in h3 { margin-bottom: 2px; }
@@ -200,133 +226,164 @@
 </head>
 <body>
 
-<header>
-  <h1>⚙️ Decision <span>Engine</span></h1>
-  <p>Pianificazione &amp; produzione · Epoca SpA · analizza → decidi → esegui → refactoring</p>
-</header>
-
-<main>
-  <!-- ==================== PLANCIA ==================== -->
-  <section id="sec-plancia" role="tabpanel" class="active">
-    <div class="card">
-      <div class="card-head">
-        <h2>📄 Report di oggi</h2>
-        <button class="btn ghost mini" type="button" data-action="copia-report">Copia report</button>
-      </div>
-      <pre class="mono" id="report-testo"></pre>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">⚙️</div>
+      <div><div class="brand-name">Epoca SpA</div><div class="brand-sub">Decision Engine</div></div>
     </div>
-
-    <div class="card">
-      <div class="card-head"><h2>⚡ Comandi a un clic</h2></div>
-      <p class="hint" style="margin-bottom:10px">Un tasto = una funzione. Ogni tasto prepara il prompt con lo stato attuale già dentro, pronto da copiare nella chat Claude del repo.</p>
-      <div class="cmd-grid">
-        <button type="button" data-action="comando" data-cmd="decisione"><span class="cmd-t">🎯 Decidi criticità</span><span class="cmd-d">le 4 domande sulle criticità aperte</span></button>
-        <button type="button" data-action="comando" data-cmd="lancio"><span class="cmd-t">📎 Lancio OP</span><span class="cmd-d">piano ottimizzato dal CSV ordini</span></button>
-        <button type="button" data-action="comando" data-cmd="pianifica"><span class="cmd-t">🗓️ Pianifica settimana</span><span class="cmd-d">piano di produzione con i dati attuali</span></button>
-        <button type="button" data-action="comando" data-cmd="kpi"><span class="cmd-t">📈 Rivedi KPI</span><span class="cmd-d">stato, cause e azioni correttive</span></button>
-        <button type="button" data-action="comando" data-cmd="refactoring"><span class="cmd-t">🔁 Refactoring</span><span class="cmd-d">perché il problema non torni</span></button>
-        <button type="button" data-action="comando" data-cmd="comunica"><span class="cmd-t">✍️ Comunicazione</span><span class="cmd-d">email/messaggi con la tua voce</span></button>
-        <button type="button" data-action="comando" data-cmd="audit"><span class="cmd-t">🩺 Audit sistema</span><span class="cmd-d">voto al setup + modifica top</span></button>
-        <button type="button" data-action="apri-performance"><span class="cmd-t">📐 Performance cella</span><span class="cmd-d">OD vs MES: pezzi e ore-uomo</span></button>
+    <nav role="tablist" aria-label="Sezioni">
+      <button type="button" role="tab" id="nav-plancia" aria-selected="true" data-action="tab" data-tab="plancia"><span class="ico">🧭</span><span>Plancia</span></button>
+      <button type="button" role="tab" id="nav-decisioni" aria-selected="false" data-action="tab" data-tab="decisioni"><span class="ico">🎯</span><span>Decisioni</span><span class="nav-badge" id="badge-decisioni"></span></button>
+      <button type="button" role="tab" id="nav-kpi" aria-selected="false" data-action="tab" data-tab="kpi"><span class="ico">📈</span><span>KPI</span><span class="nav-badge" id="badge-kpi"></span></button>
+      <button type="button" role="tab" id="nav-agenda" aria-selected="false" data-action="tab" data-tab="agenda"><span class="ico">☑️</span><span>Agenda</span></button>
+      <button type="button" role="tab" id="nav-sistema" aria-selected="false" data-action="tab" data-tab="sistema"><span class="ico">🛠️</span><span>Sistema</span></button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="status-pill">🟢 Sistema operativo<br><span id="storage-size">Dati locali</span></div>
+      <div class="profile-card">
+        <div class="profile-avatar">A</div>
+        <div><b>Andrea</b><br><span class="hint">Resp. Pianificazione</span></div>
       </div>
     </div>
+  </aside>
 
-    <div class="card">
-      <div class="card-head">
-        <h2>🧾 Log sessioni</h2>
-        <button class="btn danger mini" type="button" data-action="svuota-log">Svuota</button>
+  <div class="content">
+    <header class="top-header">
+      <div>
+        <h1 id="saluto">Buongiorno, Andrea</h1>
+        <p class="hint" id="sottotitolo-data"></p>
       </div>
-      <div id="lista-log"></div>
-    </div>
-  </section>
+      <button class="btn" type="button" data-action="comando" data-cmd="decisione">⚡ Decidi criticità</button>
+    </header>
 
-  <!-- ==================== DECISIONI (board stile Trello, colonne = stato) ==================== -->
-  <section id="sec-decisioni" role="tabpanel">
-    <div class="row board-toolbar">
-      <button class="btn grow" type="button" data-action="nuova-decisione">＋ Nuova decisione</button>
-      <button class="btn ghost" type="button" data-action="esporta-claude">📋 Esporta</button>
-    </div>
-    <p class="hint">Trascina una scheda per cambiarne lo stato. Priorità = urgenza × impatto: sotto 4 punti, delega o rimanda.</p>
-    <div id="lista-decisioni"></div>
-  </section>
+    <main>
+      <!-- ==================== PLANCIA ==================== -->
+      <section id="sec-plancia" role="tabpanel" class="active">
+        <div class="summary-grid" id="summary-grid"></div>
 
-  <!-- ==================== KPI (board a colonne di stato, sola lettura sul drag) ==================== -->
-  <section id="sec-kpi" role="tabpanel">
-    <div class="row board-toolbar">
-      <button class="btn grow" type="button" data-action="nuovo-kpi">＋ Nuovo KPI</button>
-    </div>
-    <p class="hint">Colonne calcolate dal valore vs target. Tocca ✏️ per aggiornare.</p>
-    <div id="lista-kpi"></div>
-  </section>
+        <div class="plancia-grid">
+          <div class="col-main">
+            <div class="card">
+              <div class="card-head"><h2>Comandi a un clic</h2><span class="hint">un tasto = un prompt pronto da incollare in Claude</span></div>
+              <button class="cmd-hero" type="button" data-action="comando" data-cmd="decisione">
+                <span class="cmd-hero-ico">⚡</span>
+                <span class="grow"><span class="cmd-t">Decidi criticità</span><span class="cmd-d">le 4 domande sulla decisione a priorità più alta</span></span>
+                <span class="badge b-ok" id="badge-consigliato" style="display:none">CONSIGLIATO ORA</span>
+              </button>
+              <div class="cmd-grid">
+                <button type="button" data-action="comando" data-cmd="lancio"><span class="cmd-t">📎 Lancio OP</span><span class="cmd-d">piano dal CSV ordini</span></button>
+                <button type="button" data-action="comando" data-cmd="pianifica"><span class="cmd-t">🗓️ Pianifica settimana</span><span class="cmd-d">piano con i dati attuali</span></button>
+                <button type="button" data-action="comando" data-cmd="kpi"><span class="cmd-t">📈 Rivedi KPI</span><span class="cmd-d">cause e azioni correttive</span></button>
+                <button type="button" data-action="comando" data-cmd="refactoring"><span class="cmd-t">🔁 Refactoring</span><span class="cmd-d">perché non si ripeta</span></button>
+                <button type="button" data-action="comando" data-cmd="comunica"><span class="cmd-t">✍️ Comunicazione</span><span class="cmd-d">email con la tua voce</span></button>
+                <button type="button" data-action="comando" data-cmd="audit"><span class="cmd-t">🩺 Audit sistema</span><span class="cmd-d">voto al setup + modifica top</span></button>
+                <button type="button" data-action="apri-performance"><span class="cmd-t">📐 Performance cella</span><span class="cmd-d">OD vs MES: pezzi e ore-uomo</span></button>
+              </div>
+            </div>
 
-  <!-- ==================== AGENDA (board a colonne = giorno) ==================== -->
-  <section id="sec-agenda" role="tabpanel">
-    <div class="card">
-      <h2 style="margin-bottom:6px">＋ Nuova attività</h2>
-      <input id="t-testo" placeholder="Es. Chiudere lotto 4512 su Linea 2" aria-label="Attività">
-      <div class="row" style="margin-top:var(--s2)">
-        <input id="t-cliente" class="grow" placeholder="Cliente (opz.): Mesto, Davines…" aria-label="Cliente">
-      </div>
-      <label style="margin-top:var(--s3)">Giorno</label>
-      <div class="day-chips" id="chips-giorno"></div>
-      <div class="row" style="margin-top:var(--s3)">
-        <button class="btn grow" type="button" data-action="aggiungi-task">Aggiungi all'agenda</button>
-        <button class="btn ghost mini" type="button" data-action="pulisci-fatte">Pulisci fatte</button>
-      </div>
-    </div>
-    <p class="hint">Trascina una scheda su un altro giorno per spostarla.</p>
-    <div id="lista-agenda"></div>
-  </section>
+            <div class="card">
+              <div class="card-head">
+                <h2>Report di oggi</h2>
+                <button class="btn ghost mini" type="button" data-action="copia-report">Copia report</button>
+              </div>
+              <pre class="mono" id="report-testo"></pre>
+            </div>
+          </div>
 
-  <!-- ==================== SISTEMA ==================== -->
-  <section id="sec-sistema" role="tabpanel">
-    <div class="card">
-      <div class="card-head"><h2>✍️ Guida di stile — la tua voce</h2></div>
-      <p class="hint" style="margin-bottom:8px">Regole ed esempi di come scrivi. Il tasto "✍️ Comunicazione" la include nel prompt, così Claude scrive come te.</p>
-      <textarea id="stile-testo" placeholder="Es. tono diretto, frasi corte, prima la richiesta poi il contesto…"></textarea>
-      <div style="margin-top:var(--s2)"><button class="btn mini" type="button" data-action="salva-stile">Salva stile</button></div>
-    </div>
+          <div class="col-side">
+            <div class="card">
+              <div class="card-head"><h2>In coda per priorità</h2></div>
+              <div id="lista-coda"></div>
+            </div>
+            <div class="card">
+              <div class="card-head">
+                <h2>Log sessioni</h2>
+                <button class="btn danger mini" type="button" data-action="svuota-log">Svuota</button>
+              </div>
+              <div id="lista-log"></div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-    <div class="card">
-      <div class="card-head"><h2>💾 Backup e dati</h2></div>
-      <p class="hint" style="margin-bottom:8px">I dati vivono solo su questo dispositivo (localStorage). Esporta un backup prima di cambiare telefono o browser.</p>
-      <div class="row">
-        <button class="btn ghost mini" type="button" data-action="backup">⬇️ Esporta backup</button>
-        <button class="btn ghost mini" type="button" data-action="importa">⬆️ Importa backup</button>
-        <button class="btn danger mini" type="button" data-action="azzera">Azzera tutto</button>
-      </div>
-      <input type="file" id="file-import" accept=".json" hidden>
-    </div>
+      <!-- ==================== DECISIONI ==================== -->
+      <section id="sec-decisioni" role="tabpanel">
+        <div class="row board-toolbar">
+          <button class="btn" type="button" data-action="nuova-decisione">＋ Nuova decisione</button>
+          <button class="btn ghost" type="button" data-action="esporta-claude">📋 Esporta</button>
+        </div>
+        <p class="hint" style="margin-bottom:var(--s3)">Trascina una scheda per cambiarne lo stato. Priorità = urgenza × impatto: sotto 4 punti, delega o rimanda.</p>
+        <div id="lista-decisioni"></div>
+      </section>
 
-    <div class="card">
-      <div class="card-head"><h2>ℹ️ Se i tasti non rispondono</h2></div>
-      <p class="hint">
-        Le anteprime (chat di Claude, app File di iPhone) mostrano la pagina ma possono bloccare il codice. Per usare l'app davvero:<br>
-        1. Scarica <b>index.html</b> sul dispositivo.<br>
-        2. Aprila con un <b>browser vero</b> (Chrome, Safari, Edge) — su iPhone la via più comoda è attivare GitHub Pages sul repo e aprirla da quel link.<br>
-        3. Aggiungila alla schermata Home: diventa un'app a tutti gli effetti.
-      </p>
-    </div>
+      <!-- ==================== KPI ==================== -->
+      <section id="sec-kpi" role="tabpanel">
+        <div class="row board-toolbar">
+          <button class="btn" type="button" data-action="nuovo-kpi">＋ Nuovo KPI</button>
+        </div>
+        <p class="hint" style="margin-bottom:var(--s3)">Colonne calcolate dal valore vs target. Clic su ✏️ per aggiornare.</p>
+        <div id="lista-kpi"></div>
+      </section>
 
-    <div class="card">
-      <div class="card-head"><h2>🔗 Come funziona con Claude</h2></div>
-      <p class="hint">
-        1. Registra qui criticità, KPI e agenda durante la giornata.<br>
-        2. In Plancia, tocca il comando che ti serve: ottieni il prompt con lo stato già dentro.<br>
-        3. Incollalo in una chat del repo <b>Progetto-make-decision</b>: la Decision Engine risponde con decisione, piano e refactoring.<br>
-        4. Riporta qui la decisione presa e spunta le attività fatte.
-      </p>
-    </div>
-  </section>
-</main>
+      <!-- ==================== AGENDA ==================== -->
+      <section id="sec-agenda" role="tabpanel">
+        <div class="card">
+          <h2 style="margin-bottom:6px">＋ Nuova attività</h2>
+          <div class="row">
+            <input id="t-testo" class="grow" placeholder="Es. Chiudere lotto 4512 su Linea 2" aria-label="Attività">
+            <input id="t-cliente" style="flex:0 0 220px" placeholder="Cliente (opz.)" aria-label="Cliente">
+          </div>
+          <label style="margin-top:var(--s3)">Giorno</label>
+          <div class="day-chips" id="chips-giorno"></div>
+          <div class="row" style="margin-top:var(--s3)">
+            <button class="btn" type="button" data-action="aggiungi-task">Aggiungi all'agenda</button>
+            <button class="btn ghost mini" type="button" data-action="pulisci-fatte">Pulisci fatte</button>
+          </div>
+        </div>
+        <p class="hint" style="margin-bottom:var(--s3)">Trascina una scheda su un altro giorno per spostarla.</p>
+        <div id="lista-agenda"></div>
+      </section>
 
-<nav role="tablist" aria-label="Sezioni">
-  <button type="button" role="tab" id="nav-plancia" aria-selected="true" data-action="tab" data-tab="plancia"><span class="ico">🧭</span>Plancia</button>
-  <button type="button" role="tab" id="nav-decisioni" aria-selected="false" data-action="tab" data-tab="decisioni"><span class="ico">🎯</span>Decisioni</button>
-  <button type="button" role="tab" id="nav-kpi" aria-selected="false" data-action="tab" data-tab="kpi"><span class="ico">📈</span>KPI</button>
-  <button type="button" role="tab" id="nav-agenda" aria-selected="false" data-action="tab" data-tab="agenda"><span class="ico">☑️</span>Agenda</button>
-  <button type="button" role="tab" id="nav-sistema" aria-selected="false" data-action="tab" data-tab="sistema"><span class="ico">🛠️</span>Sistema</button>
-</nav>
+      <!-- ==================== SISTEMA ==================== -->
+      <section id="sec-sistema" role="tabpanel">
+        <div class="card">
+          <div class="card-head"><h2>✍️ Guida di stile — la tua voce</h2></div>
+          <p class="hint" style="margin-bottom:8px">Regole ed esempi di come scrivi. Il tasto "Comunicazione" la include nel prompt, così Claude scrive come te.</p>
+          <textarea id="stile-testo" placeholder="Es. tono diretto, frasi corte, prima la richiesta poi il contesto…"></textarea>
+          <div style="margin-top:var(--s2)"><button class="btn mini" type="button" data-action="salva-stile">Salva stile</button></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>💾 Backup e dati</h2></div>
+          <p class="hint" style="margin-bottom:8px">I dati vivono solo su questo browser (localStorage). Esporta un backup prima di cambiare postazione.</p>
+          <div class="row">
+            <button class="btn ghost mini" type="button" data-action="backup">⬇️ Esporta backup</button>
+            <button class="btn ghost mini" type="button" data-action="importa">⬆️ Importa backup</button>
+            <button class="btn danger mini" type="button" data-action="azzera">Azzera tutto</button>
+          </div>
+          <input type="file" id="file-import" accept=".json" hidden>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>🖥️ Pagina PC aziendale</h2></div>
+          <p class="hint">
+            Questa vista (<b>app/pc.html</b>) è pensata solo per la postazione in ufficio: schermo largo, sidebar fissa, mouse.<br>
+            Da telefono usa <b>app/index.html</b> (board) o <b>app/classic.html</b> (liste) — stessa logica, stesso registro decisioni.<br>
+            Se pubblichi il repo con GitHub Pages, aprendo le pagine dallo stesso dominio i dati restano separati per pagina (ogni file ha il proprio localStorage): usa il backup JSON per portarli da una vista all'altra.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>🔗 Come funziona con Claude</h2></div>
+          <p class="hint">
+            1. Registra qui criticità, KPI e agenda durante la giornata.<br>
+            2. In Plancia, tocca il comando che ti serve: ottieni il prompt con lo stato già dentro.<br>
+            3. Incollalo in una chat del repo <b>Progetto-make-decision</b>: la Decision Engine risponde con decisione, piano e refactoring.<br>
+            4. Riporta qui la decisione presa e spunta le attività fatte.
+          </p>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
 
 <!-- ==================== DIALOG: WIZARD 4 DOMANDE ==================== -->
 <dialog id="dlg-wizard">
@@ -363,9 +420,7 @@
     <label for="w-refactoring">Refactoring — cosa cambia perché non si ripresenti</label>
     <textarea id="w-refactoring"></textarea>
     <div class="dlg-actions">
-      <span class="row">
-        <button type="button" class="btn danger mini" id="w-del" data-action="elimina-decisione-dlg">Elimina</button>
-      </span>
+      <span class="row"><button type="button" class="btn danger mini" id="w-del" data-action="elimina-decisione-dlg">Elimina</button></span>
       <span class="row">
         <button type="button" class="btn ghost" data-action="chiudi-dialog" data-dlg="dlg-wizard">Annulla</button>
         <button class="btn" type="submit">Salva</button>
@@ -411,7 +466,7 @@
 <dialog id="dlg-perf">
   <form class="dlg-in" id="form-perf">
     <h3>📐 Performance cella</h3>
-    <p class="steps">Confronta il tempo teorico da OD con l'effettivo da MES: pezzi e ore-uomo di impatto, calcolati subito qui, senza aspettare Claude.</p>
+    <p class="steps">Confronta il tempo teorico da OD con il Tempo Linea Totale da MES: pezzi e ore-uomo di impatto, calcolati subito qui.</p>
     <label for="p-op">OP / riferimento</label>
     <input id="p-op" placeholder="Es. 305090 fase 1924693">
     <label for="p-cella">Cella di lavoro</label>
@@ -467,16 +522,12 @@
 <script>
 "use strict";
 /* ============================================================
-   Decision Engine v4 — board stile Trello
-   Regole architetturali (invariate dal refactoring precedente):
-   1. ZERO handler inline: tutti gli eventi passano da delegazione
-      (data-action) o dal motore drag&drop qui sotto.
-   2. Un tasto = una funzione: ogni data-action mappa 1:1 su una
-      funzione in AZIONI.
-   3. Stato unico in localStorage, render puro per sezione.
-   Novità: Decisioni e Agenda sono board a colonne trascinabili
-   (Pointer Events: funziona con mouse E touch, niente HTML5 DnD
-   che su Safari mobile non è supportato).
+   Decision Engine — pagina PC aziendale
+   Stessa logica dati e stesse regole di app/index.html (board
+   Trello, calcolatore performance cella, comandi a un clic):
+   qui cambia solo lo chrome (sidebar desktop invece di tab bar
+   mobile) e in più ci sono le tessere di riepilogo e la coda
+   priorità della Plancia. Zero handler inline, delegazione eventi.
    ============================================================ */
 
 const GIORNI = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
@@ -494,7 +545,6 @@ let db = carica();
 let giornoSelezionato = giornoOggi();
 function salva() { localStorage.setItem(KEY, JSON.stringify(db)); }
 
-/* ---------- dialog helpers (con fallback se showModal manca) ---------- */
 function apriDialog(id) {
   const d = $(id);
   if (d.open) return;
@@ -507,7 +557,6 @@ function chiudiDialog(id) {
   d.removeAttribute("open"); d.classList.remove("fallback-open");
 }
 
-/* ---------- log ---------- */
 function logEvento(msg) {
   db.log.push({ q: new Date().toLocaleString("it-IT", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }), m: msg });
   if (db.log.length > 60) db.log = db.log.slice(-60);
@@ -519,7 +568,6 @@ function renderLog() {
     : '<p class="hint">Ancora nessuna attività registrata.</p>';
 }
 
-/* ---------- priorità e stato ---------- */
 function prioInfo(d) {
   const p = d.urgenza * d.impatto;
   if (p >= 16) return { p, label: "Decidi oggi", cls: "b-bad" };
@@ -532,7 +580,6 @@ const DECISIONI_COLS = [
   { key: "eseguita", label: "Eseguita" }, { key: "verificata", label: "Verificata" }
 ];
 
-/* ---------- motore board generico (render colonne) ---------- */
 function renderBoard(containerId, columns, itemsOf, cardHtml) {
   const el = $(containerId);
   el.innerHTML = `<div class="board-row">` + columns.map(c => {
@@ -546,7 +593,6 @@ function renderBoard(containerId, columns, itemsOf, cardHtml) {
   }).join("") + `</div>`;
 }
 
-/* ---------- decisioni (board per stato) ---------- */
 function renderDecisioni() {
   renderBoard("lista-decisioni", DECISIONI_COLS,
     key => db.decisioni.filter(d => d.stato === key).sort((a, b) => prioInfo(b).p - prioInfo(a).p),
@@ -595,7 +641,6 @@ function salvaDecisione() {
   chiudiDialog("dlg-wizard");
 }
 
-/* ---------- KPI (board a colonne di stato, non trascinabile) ---------- */
 function statoKpi(k) {
   if (k.valore === null || k.valore === undefined || k.valore === "") return { cls: "b-brand", label: "n.d." };
   const v = +k.valore, t = +k.target, margine = Math.abs(t) * 0.05;
@@ -648,10 +693,7 @@ function salvaKpi() {
   chiudiDialog("dlg-kpi");
 }
 
-/* ---------- agenda (board per giorno) ---------- */
-function giornoOggi() {
-  return GIORNI[(new Date().getDay() + 6) % 7];
-}
+function giornoOggi() { return GIORNI[(new Date().getDay() + 6) % 7]; }
 function giorniDaOggi() {
   const i = GIORNI.indexOf(giornoOggi());
   return [...GIORNI.slice(i), ...GIORNI.slice(0, i)];
@@ -690,7 +732,7 @@ function rimandaTask(id) {
   salva(); renderAgenda(); renderPlancia();
 }
 
-/* ---------- drag & drop (Pointer Events: mouse + touch, niente HTML5 DnD) ---------- */
+/* ---------- drag & drop (Pointer Events: qui soprattutto mouse) ---------- */
 let drag = null;
 const SOGLIA_PX = 8;
 function iniziaDragListener() {
@@ -722,7 +764,6 @@ function iniziaDragListener() {
     }
     if (drag.moved) {
       e.preventDefault();
-      // auto-scroll orizzontale della board quando si trascina vicino al bordo (mobile: colonne oltre lo schermo)
       const row = drag.card.closest(".board-row");
       if (row) {
         const r = row.getBoundingClientRect(), EDGE = 46, STEP = 16;
@@ -740,7 +781,7 @@ function iniziaDragListener() {
       drag.targetCol = col;
     }
   });
-  function fineDrag(e) {
+  function fineDrag() {
     if (!drag) return;
     const { moved, targetCol, coll, id, card } = drag;
     if (drag.ghost) drag.ghost.remove();
@@ -768,11 +809,9 @@ function spostaCard(coll, id, nuovaChiave) {
     renderAgenda();
   }
 }
-function apriDettaglioCard(coll, id) {
-  if (coll === "decisioni") apriWizard(id);
-}
+function apriDettaglioCard(coll, id) { if (coll === "decisioni") apriWizard(id); }
 
-/* ---------- performance cella (OD vs MES): calcolo istantaneo, no round-trip Claude ---------- */
+/* ---------- performance cella (OD vs MES): calcolo istantaneo ---------- */
 let ultimoPerf = null;
 function renderChipsStaff() {
   const attivo = $("p-nop").value.trim();
@@ -780,11 +819,7 @@ function renderChipsStaff() {
     `<button type="button" data-action="scegli-staff" data-n="${n}" aria-pressed="${String(n) === attivo}">${n} pers.</button>`
   ).join("");
 }
-function sceglieStaff(n) {
-  $("p-nop").value = n;
-  renderChipsStaff();
-  calcolaPerformance();
-}
+function sceglieStaff(n) { $("p-nop").value = n; renderChipsStaff(); calcolaPerformance(); }
 function calcolaPerformance() {
   const qta = +$("p-qta").value, prodh = +$("p-prodh").value, tmes = +$("p-tmes").value;
   const nopStr = $("p-nop").value.trim();
@@ -794,7 +829,7 @@ function calcolaPerformance() {
   renderChipsStaff();
   const box = $("perf-risultato");
   if (!qta || !prodh || !tmes) {
-    box.innerHTML = '<p class="hint" style="margin-top:var(--s2)">Compila quantità, produzione oraria e tempo MES.</p>';
+    box.innerHTML = '<p class="hint" style="margin-top:var(--s2)">Compila quantità, produzione oraria e Tempo Linea Totale.</p>';
     ultimoPerf = null;
     return;
   }
@@ -810,7 +845,7 @@ function calcolaPerformance() {
       <b>${esc(cella || op || "Cella")}</b>
       <span class="badge ${cls}">${perf.toFixed(1)}% performance</span>
     </div>
-    <div class="hint" style="margin-top:4px">Teorico ${tTeo.toFixed(1)} min · Effettivo ${tmes.toFixed(1)} min · Delta ${delta >= 0 ? "+" : ""}${delta.toFixed(1)} min</div>`;
+    <div class="hint" style="margin-top:4px">Teorico ${tTeo.toFixed(1)} min · Tempo Linea Totale ${tmes.toFixed(1)} min · Delta ${delta >= 0 ? "+" : ""}${delta.toFixed(1)} min</div>`;
 
   let alert;
   if (delta > 0.05) {
@@ -829,18 +864,13 @@ function calcolaPerformance() {
     html += `<div class="qa"><b>Impatto</b>Nessuno scostamento rilevante.</div>`;
     alert = "🟢 Performance in linea.";
   }
-  if (nop) {
-    html += `<div class="qa"><b>Bilanciamento ore-uomo</b>teoriche ${((tTeo * nop) / 60).toFixed(2)}h vs effettive ${((tmes * nop) / 60).toFixed(2)}h</div>`;
-  }
+  if (nop) html += `<div class="qa"><b>Bilanciamento ore-uomo</b>teoriche ${((tTeo * nop) / 60).toFixed(2)}h vs effettive ${((tmes * nop) / 60).toFixed(2)}h</div>`;
   html += `<div class="qa" style="margin-top:6px"><b>Alert</b>${alert}</div>`;
 
-  // D. Ricalcolo dinamico staffing — confronto con lo standard di linea
   let staffMsg = "";
   if (nop && standard) {
-    const oreEffNop = (tmes * nop) / 60;
-    const oreEffStd = (tmes * standard) / 60;
-    const deltaOreStaff = oreEffNop - oreEffStd;
-    const segnoOre = deltaOreStaff >= 0 ? "+" : "";
+    const oreEffNop = (tmes * nop) / 60, oreEffStd = (tmes * standard) / 60;
+    const deltaOreStaff = oreEffNop - oreEffStd, segnoOre = deltaOreStaff >= 0 ? "+" : "";
     html += `<div class="qa"><b>Ore-uomo effettive totali (${nop} pers.)</b>${oreEffNop.toFixed(2)}h · vs standard (${standard} pers.): ${segnoOre}${deltaOreStaff.toFixed(2)}h</div>`;
     const deficitReale = 100 - perf;
     if (nop < standard) {
@@ -922,9 +952,83 @@ function buildReport() {
   if (daVerificare.length) t += `\nDA VERIFICARE (decisioni eseguite): ${daVerificare.map(d => d.titolo).join("; ")}\n`;
   return t;
 }
+
+/* ---------- widget solo desktop: saluto, tessere riepilogo, coda priorità, badge sidebar ---------- */
+function renderSaluto() {
+  const ora = new Date().getHours();
+  const saluto = ora < 12 ? "Buongiorno" : ora < 18 ? "Buon pomeriggio" : "Buonasera";
+  const critiche = db.decisioni.filter(d => d.stato === "aperta" && prioInfo(d).p >= 16).length;
+  $("saluto").textContent = `${saluto}, Andrea`;
+  const dataStr = new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  $("sottotitolo-data").textContent = dataStr + (critiche ? ` · ${critiche} criticità richiede${critiche > 1 ? "no" : ""} la tua attenzione` : " · nessuna criticità urgente");
+  $("badge-consigliato").style.display = critiche ? "" : "none";
+}
+function renderSummary() {
+  const aperte = db.decisioni.filter(d => d.stato === "aperta");
+  const critiche = aperte.filter(d => prioInfo(d).p >= 16).length;
+  const kpiFuori = db.kpi.filter(k => statoKpi(k).label === "Fuori target" || statoKpi(k).label === "Attenzione");
+  const oggiTasks = db.settimana.filter(t => t.giorno === giornoOggi());
+  const oggiFatte = oggiTasks.filter(t => t.fatto).length;
+  const pctOggi = oggiTasks.length ? Math.round(oggiFatte / oggiTasks.length * 100) : 0;
+  const ultimo = db.log[db.log.length - 1];
+  const topDecisione = [...aperte].sort((a, b) => prioInfo(b).p - prioInfo(a).p)[0];
+  const worstKpi = kpiFuori[0];
+
+  $("summary-grid").innerHTML = `
+    <div class="tile ${critiche ? "t-bad" : "t-brand"}">
+      <div class="tile-lbl">Decisioni aperte</div>
+      <div class="tile-val">${aperte.length}${critiche ? `<small style="color:var(--bad)">${critiche} critica${critiche > 1 ? "" : ""}</small>` : ""}</div>
+      <div class="tile-sub">${topDecisione ? esc(topDecisione.titolo) : "nessuna criticità aperta"}</div>
+    </div>
+    <div class="tile ${kpiFuori.length ? "t-warn" : "t-ok"}">
+      <div class="tile-lbl">KPI fuori target</div>
+      <div class="tile-val">${kpiFuori.length}<small>/${db.kpi.length}</small></div>
+      <div class="tile-sub">${worstKpi ? esc(worstKpi.nome) : "tutti a target"}</div>
+    </div>
+    <div class="tile t-ok">
+      <div class="tile-lbl">Agenda di oggi</div>
+      <div class="tile-val">${oggiFatte}<small>/${oggiTasks.length}</small></div>
+      <div class="tile-bar"><i style="width:${pctOggi}%"></i></div>
+    </div>
+    <div class="tile t-brand">
+      <div class="tile-lbl">Ultima attività</div>
+      <div class="tile-val" style="font-size:1.25rem">${ultimo ? esc(ultimo.q) : "—"}</div>
+      <div class="tile-sub">${ultimo ? esc(ultimo.m) : "nessuna attività registrata"}</div>
+    </div>`;
+}
+function renderCoda() {
+  const aperte = [...db.decisioni].filter(d => d.stato === "aperta").sort((a, b) => prioInfo(b).p - prioInfo(a).p).slice(0, 5);
+  $("lista-coda").innerHTML = aperte.length
+    ? aperte.map(d => {
+        const pr = prioInfo(d);
+        return `<div class="coda-item" data-action="modifica-decisione" data-id="${d.id}">
+          <div class="coda-p">${pr.p}</div>
+          <div class="grow">
+            <div class="coda-t">${esc(d.titolo)}</div>
+            <div class="coda-sub">${esc(d.ambito)} · aperta</div>
+          </div>
+        </div>`;
+      }).join("")
+    : '<p class="hint">Nessuna decisione aperta in coda.</p>';
+}
+function renderBadgeSidebar() {
+  const aperte = db.decisioni.filter(d => d.stato === "aperta").length;
+  const kpiFuori = db.kpi.filter(k => statoKpi(k).label === "Fuori target" || statoKpi(k).label === "Attenzione").length;
+  $("badge-decisioni").textContent = aperte || "";
+  $("badge-kpi").textContent = kpiFuori || "";
+}
+function renderStorageSize() {
+  const bytes = new Blob([JSON.stringify(db)]).size;
+  $("storage-size").textContent = `Dati locali · ${(bytes / 1024).toFixed(1)} KB`;
+}
 function renderPlancia() {
   $("report-testo").textContent = buildReport();
   renderLog();
+  renderSaluto();
+  renderSummary();
+  renderCoda();
+  renderBadgeSidebar();
+  renderStorageSize();
 }
 function mostraPrompt(testo) {
   $("export-testo").textContent = testo;
@@ -963,12 +1067,8 @@ function comando(tipo) {
   logEvento("Comando preparato: " + tipo);
 }
 
-/* ---------- clipboard con fallback ---------- */
 function copiaTesto(testo, btn, etichetta) {
-  const fatto = () => {
-    btn.textContent = "✓ Copiato";
-    setTimeout(() => { btn.textContent = etichetta; }, 1600);
-  };
+  const fatto = () => { btn.textContent = "✓ Copiato"; setTimeout(() => { btn.textContent = etichetta; }, 1600); };
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(testo).then(fatto).catch(() => copiaFallback(testo, fatto));
   } else copiaFallback(testo, fatto);
@@ -982,7 +1082,6 @@ function copiaFallback(testo, fatto) {
   document.body.removeChild(ta);
 }
 
-/* ---------- backup ---------- */
 function backupJson() {
   const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
@@ -1009,7 +1108,6 @@ function importaJson(input) {
   reader.readAsText(file);
 }
 
-/* ---------- mappa azioni: un tasto = una funzione ---------- */
 const AZIONI = {
   "tab":               el => vai(el.dataset.tab),
   "copia-report":      el => { copiaTesto($("report-testo").textContent, el, "Copia report"); logEvento("Report giornaliero copiato"); },
@@ -1018,6 +1116,7 @@ const AZIONI = {
   "nuova-decisione":   () => apriWizard(),
   "esporta-claude":    () => { mostraPrompt(buildExport()); logEvento("Prompt completo esportato"); },
   "chiedi-claude":     el => { mostraPrompt(buildExport(el.dataset.id)); logEvento("Prompt singola criticità"); },
+  "modifica-decisione": el => apriWizard(el.dataset.id),
   "elimina-decisione": el => {
     if (!confirm("Eliminare questa decisione dal registro?")) return;
     db.decisioni = db.decisioni.filter(x => x.id !== el.dataset.id);
@@ -1046,10 +1145,7 @@ const AZIONI = {
     const t = db.settimana.find(x => x.id === el.dataset.id);
     if (t) { t.fatto = !t.fatto; salva(); renderAgenda(); renderPlancia(); }
   },
-  "elimina-task":      el => {
-    db.settimana = db.settimana.filter(x => x.id !== el.dataset.id);
-    salva(); renderAgenda(); renderPlancia();
-  },
+  "elimina-task":      el => { db.settimana = db.settimana.filter(x => x.id !== el.dataset.id); salva(); renderAgenda(); renderPlancia(); },
   "pulisci-fatte":     () => { db.settimana = db.settimana.filter(x => !x.fatto); salva(); renderAgenda(); renderPlancia(); },
   "salva-stile":       el => {
     db.stile = $("stile-testo").value.trim(); salva();
@@ -1076,7 +1172,6 @@ const AZIONI = {
   "scegli-staff":      el => sceglieStaff(+el.dataset.n)
 };
 
-/* ---------- delegazione eventi (niente handler inline) ---------- */
 document.addEventListener("click", e => {
   const el = e.target.closest("[data-action]");
   if (!el) return;
@@ -1095,16 +1190,14 @@ $("form-kpi").addEventListener("submit", e => { e.preventDefault(); salvaKpi(); 
 $("form-perf").addEventListener("submit", e => { e.preventDefault(); calcolaPerformance(); });
 $("t-testo").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); aggiungiTask(); } });
 
-/* ---------- navigazione ---------- */
 function vai(tab) {
   document.querySelectorAll("section[role=tabpanel]").forEach(s => s.classList.remove("active"));
-  document.querySelectorAll("nav button").forEach(b => b.setAttribute("aria-selected", "false"));
+  document.querySelectorAll(".sidebar nav button").forEach(b => b.setAttribute("aria-selected", "false"));
   $("sec-" + tab).classList.add("active");
   $("nav-" + tab).setAttribute("aria-selected", "true");
   if (tab === "plancia") renderPlancia();
 }
 
-/* ---------- init ---------- */
 function renderTutto() {
   renderDecisioni(); renderKpi(); renderAgenda(); renderPlancia();
   $("stile-testo").value = db.stile || "";
