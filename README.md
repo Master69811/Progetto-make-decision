@@ -20,7 +20,8 @@ Le altre slide del carosello sono adattate così al lavoro di produzione:
 
 | Percorso | Cosa fa |
 |---|---|
-| `app/index.html` | **L'app operativa (la plancia di comando).** Un solo file, funziona offline e da telefono, dati salvati sul dispositivo (localStorage). Tab **Plancia** con report giornaliero automatico, comandi a un clic e log sessioni; registro decisioni con le 4 domande, priorità automatica, KPI con stato OK/Attenzione/Fuori target, piano settimanale, guida di stile, backup JSON. |
+| `app/index.html` | **L'app operativa, vista board stile Trello.** Un solo file, funziona offline e da telefono, dati salvati sul dispositivo (localStorage). Decisioni e Agenda sono board a colonne trascinabili (Decisioni: Aperta→Decisa→Eseguita→Verificata; Agenda: colonne per giorno); KPI a colonne per stato (Fuori target/Attenzione/OK). Tab **Plancia** con report giornaliero, comandi a un clic e log sessioni; guida di stile, backup JSON. |
+| `app/classic.html` | **Stessa app, vista a liste** (senza drag & drop): utile se preferisci scorrere elenchi invece di trascinare schede, o su schermi molto piccoli. Dati condivisi con `index.html` (stesso localStorage). |
 | `CLAUDE.md` | **Il cervello.** Il system prompt della Decision Engine: si attiva da solo in ogni sessione Claude aperta su questo repo — non serve più incollarlo. |
 | `contesto/profilo.md` | **La memoria fissa.** Ruolo, clienti (Mesto, Davines…), sistemi ERP/MES, KPI e vincoli ricorrenti. Compilarlo una volta = non rispiegare mai il contesto (riduzione token). |
 | `contesto/stile.md` | **La tua voce.** Guida di stile per email e messaggi: `/comunica` la usa per scrivere come te. |

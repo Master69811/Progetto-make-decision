@@ -37,7 +37,7 @@
     background: var(--bg); color: var(--ink);
     padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
-  main, header { max-width: 960px; margin: 0 auto; }
+  main, header { max-width: 720px; margin: 0 auto; }
   header { padding: var(--s4) var(--s4) var(--s2); }
   header h1 { font-size: 1.3rem; font-weight: 800; letter-spacing: -.02em; }
   header h1 span { color: var(--brand); }
@@ -132,46 +132,23 @@
   .log-item:last-child { border-bottom: 0; }
   .log-item time { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-  /* ==================== BOARD STILE TRELLO ==================== */
-  .board-toolbar { margin: var(--s3) 0; }
-  .board-row {
-    display: flex; gap: var(--s3); overflow-x: auto; padding: 2px 2px var(--s3);
-    -webkit-overflow-scrolling: touch;
-  }
-  .board-col {
-    flex: 0 0 82%; max-width: 300px; display: flex; flex-direction: column;
-    background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-lg);
-    max-height: calc(100vh - 250px); transition: outline-color .12s, background .12s;
-  }
-  @media (min-width: 620px) { .board-col { flex: 0 0 260px; } }
-  .board-col.today { border-color: var(--brand); }
-  .board-col-head {
-    padding: 10px 12px; display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface-2);
-    border-radius: var(--r-lg) var(--r-lg) 0 0; z-index: 1;
-  }
-  .board-col-head span:first-child { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
-  .board-col.today .board-col-head span:first-child { color: var(--brand); }
-  .board-col-count { font-size: .7rem; font-weight: 700; color: var(--muted); background: var(--surface); border-radius: 999px; padding: 1px 8px; }
-  .board-col-body { padding: var(--s2); overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: var(--s2); min-height: 64px; }
-  .board-col.drop-target { outline: 2px dashed var(--brand); outline-offset: -2px; background: var(--brand-soft); }
-  .board-empty { padding: var(--s3) var(--s1); text-align: center; }
+  /* ==================== DECISIONI ==================== */
+  .dec-head { display: flex; justify-content: space-between; gap: var(--s2); align-items: flex-start; cursor: pointer; }
+  .dec-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .dec-body { display: none; margin-top: var(--s3); border-top: 1px solid var(--line); padding-top: var(--s2); }
+  .card.open .dec-body { display: block; }
+  .qa { margin: var(--s2) 0; font-size: .88rem; }
+  .qa b { display: block; color: var(--muted); font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 1px; }
+  .range-row { display: flex; align-items: center; gap: var(--s3); }
+  .range-row input[type=range] { flex: 1; min-height: auto; padding: 0; border: 0; background: none; accent-color: var(--brand); }
+  .range-row output { font-weight: 800; min-width: 1.4em; text-align: center; font-size: 1.05rem; color: var(--brand-ink); }
 
-  .kcard {
-    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
-    padding: 10px 11px; box-shadow: var(--shadow); touch-action: none; cursor: grab;
-  }
-  .kcard[data-coll="kpi"] { cursor: default; touch-action: auto; }
-  .kcard.kcard-source { opacity: .3; }
-  .kcard-ghost { position: fixed; z-index: 100; pointer-events: none; transform: rotate(1.5deg); box-shadow: 0 14px 32px rgba(0,0,0,.28); opacity: .96; }
-  .kcard-title { font-weight: 700; font-size: .87rem; }
-  .kcard-meta { font-size: .72rem; color: var(--muted); margin-top: 2px; }
-  .kcard-actions { display: flex; gap: 6px; margin-top: 8px; }
-  .kcard .badge { margin-top: 7px; }
-  .kcard.kcard-done .kcard-title { text-decoration: line-through; color: var(--muted); }
-  .t-cli { display: inline-block; font-size: .68rem; font-weight: 800; color: var(--brand-ink); background: var(--brand-soft); border-radius: 5px; padding: 1px 6px; margin-bottom: 4px; }
-  .kpi-val { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1rem; margin-top: 4px; }
+  /* ==================== KPI ==================== */
+  .kpi-row { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s1); border-bottom: 1px solid var(--line); }
+  .kpi-row:last-child { border-bottom: 0; }
+  .kpi-val { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1rem; }
 
+  /* ==================== AGENDA ==================== */
   .day-chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px; -webkit-overflow-scrolling: touch; }
   .day-chips button {
     flex: 0 0 auto; min-height: 38px; padding: 0 13px; border: 1.5px solid var(--line);
@@ -180,10 +157,20 @@
     -webkit-tap-highlight-color: transparent;
   }
   .day-chips button[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: #fff; }
-
-  .range-row { display: flex; align-items: center; gap: var(--s3); }
-  .range-row input[type=range] { flex: 1; min-height: auto; padding: 0; border: 0; background: none; accent-color: var(--brand); }
-  .range-row output { font-weight: 800; min-width: 1.4em; text-align: center; font-size: 1.05rem; color: var(--brand-ink); }
+  .day-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: var(--s3) var(--s4); margin: var(--s2) 0; box-shadow: var(--shadow); }
+  .day-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
+  .day-name { font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .day-card.today .day-name { color: var(--brand); }
+  .day-count { font-size: .72rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .progress { height: 4px; border-radius: 99px; background: var(--line); margin: 7px 0 2px; overflow: hidden; }
+  .progress i { display: block; height: 100%; background: var(--ok); border-radius: 99px; transition: width .2s; }
+  .task { display: flex; gap: var(--s3); align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .task:last-child { border-bottom: 0; }
+  .task input[type=checkbox] { width: 22px; height: 22px; min-height: auto; flex: none; accent-color: var(--ok); }
+  .task .t-text { font-size: .9rem; }
+  .task.done .t-text { text-decoration: line-through; color: var(--muted); }
+  .t-cli { display: inline-block; font-size: .68rem; font-weight: 800; color: var(--brand-ink); background: var(--brand-soft); border-radius: 5px; padding: 1px 6px; margin-bottom: 2px; }
+  .t-actions { display: flex; gap: 6px; margin-left: auto; }
 
   /* ==================== DIALOG ==================== */
   dialog {
@@ -239,26 +226,26 @@
     </div>
   </section>
 
-  <!-- ==================== DECISIONI (board stile Trello, colonne = stato) ==================== -->
+  <!-- ==================== DECISIONI ==================== -->
   <section id="sec-decisioni" role="tabpanel">
-    <div class="row board-toolbar">
+    <div class="row" style="margin:var(--s3) 0">
       <button class="btn grow" type="button" data-action="nuova-decisione">＋ Nuova decisione</button>
       <button class="btn ghost" type="button" data-action="esporta-claude">📋 Esporta</button>
     </div>
-    <p class="hint">Trascina una scheda per cambiarne lo stato. Priorità = urgenza × impatto: sotto 4 punti, delega o rimanda.</p>
+    <p class="hint">Ordinate per priorità = urgenza × impatto. Sotto 4 punti: delega o rimanda.</p>
     <div id="lista-decisioni"></div>
   </section>
 
-  <!-- ==================== KPI (board a colonne di stato, sola lettura sul drag) ==================== -->
+  <!-- ==================== KPI ==================== -->
   <section id="sec-kpi" role="tabpanel">
-    <div class="row board-toolbar">
+    <div class="row" style="margin:var(--s3) 0">
       <button class="btn grow" type="button" data-action="nuovo-kpi">＋ Nuovo KPI</button>
     </div>
-    <p class="hint">Colonne calcolate dal valore vs target. Tocca ✏️ per aggiornare.</p>
-    <div id="lista-kpi"></div>
+    <p class="hint"><span class="badge b-ok">OK</span> a target · <span class="badge b-warn">Attenzione</span> entro il 5% · <span class="badge b-bad">Fuori</span> oltre. Tocca ✏️ per aggiornare il valore.</p>
+    <div class="card" id="lista-kpi" style="padding:var(--s1) var(--s4)"></div>
   </section>
 
-  <!-- ==================== AGENDA (board a colonne = giorno) ==================== -->
+  <!-- ==================== AGENDA (to-do per giorno) ==================== -->
   <section id="sec-agenda" role="tabpanel">
     <div class="card">
       <h2 style="margin-bottom:6px">＋ Nuova attività</h2>
@@ -273,7 +260,6 @@
         <button class="btn ghost mini" type="button" data-action="pulisci-fatte">Pulisci fatte</button>
       </div>
     </div>
-    <p class="hint">Trascina una scheda su un altro giorno per spostarla.</p>
     <div id="lista-agenda"></div>
   </section>
 
@@ -362,13 +348,8 @@
     <label for="w-refactoring">Refactoring — cosa cambia perché non si ripresenti</label>
     <textarea id="w-refactoring"></textarea>
     <div class="dlg-actions">
-      <span class="row">
-        <button type="button" class="btn danger mini" id="w-del" data-action="elimina-decisione-dlg">Elimina</button>
-      </span>
-      <span class="row">
-        <button type="button" class="btn ghost" data-action="chiudi-dialog" data-dlg="dlg-wizard">Annulla</button>
-        <button class="btn" type="submit">Salva</button>
-      </span>
+      <button type="button" class="btn ghost" data-action="chiudi-dialog" data-dlg="dlg-wizard">Annulla</button>
+      <button class="btn" type="submit">Salva decisione</button>
     </div>
   </form>
 </dialog>
@@ -422,16 +403,13 @@
 <script>
 "use strict";
 /* ============================================================
-   Decision Engine v4 — board stile Trello
-   Regole architetturali (invariate dal refactoring precedente):
+   Decision Engine v3 — refactoring completo
+   Regole architetturali:
    1. ZERO handler inline: tutti gli eventi passano da delegazione
-      (data-action) o dal motore drag&drop qui sotto.
+      (data-action), così l'app regge anche sotto CSP restrittive.
    2. Un tasto = una funzione: ogni data-action mappa 1:1 su una
       funzione in AZIONI.
    3. Stato unico in localStorage, render puro per sezione.
-   Novità: Decisioni e Agenda sono board a colonne trascinabili
-   (Pointer Events: funziona con mouse E touch, niente HTML5 DnD
-   che su Safari mobile non è supportato).
    ============================================================ */
 
 const GIORNI = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
@@ -481,41 +459,45 @@ function prioInfo(d) {
   if (p >= 4)  return { p, label: "Programma", cls: "b-brand" };
   return { p, label: "Delega / rimanda", cls: "b-ok" };
 }
-const DECISIONI_COLS = [
-  { key: "aperta", label: "Aperta" }, { key: "decisa", label: "Decisa" },
-  { key: "eseguita", label: "Eseguita" }, { key: "verificata", label: "Verificata" }
-];
+const STATO_BADGE = { aperta: "b-bad", decisa: "b-warn", eseguita: "b-brand", verificata: "b-ok" };
 
-/* ---------- motore board generico (render colonne) ---------- */
-function renderBoard(containerId, columns, itemsOf, cardHtml) {
-  const el = $(containerId);
-  el.innerHTML = `<div class="board-row">` + columns.map(c => {
-    const items = itemsOf(c.key);
-    return `<div class="board-col ${c.today ? "today" : ""}" data-col="${c.key}">
-      <div class="board-col-head"><span>${c.today ? "Oggi · " : ""}${esc(c.label)}</span><span class="board-col-count">${items.length}</span></div>
-      <div class="board-col-body">
-        ${items.length ? items.map(cardHtml).join("") : '<p class="hint board-empty">Vuoto</p>'}
+/* ---------- decisioni ---------- */
+function renderDecisioni() {
+  const box = $("lista-decisioni");
+  if (!db.decisioni.length) {
+    box.innerHTML = '<div class="card empty">Nessuna criticità registrata.<br>Parti da "＋ Nuova decisione": le 4 domande sono già il modulo.</div>';
+    return;
+  }
+  const ordinate = [...db.decisioni].sort((a, b) =>
+    (+(a.stato === "verificata") - +(b.stato === "verificata")) || prioInfo(b).p - prioInfo(a).p);
+  box.innerHTML = ordinate.map(d => {
+    const pr = prioInfo(d);
+    const qa = [["Obiettivo", d.obiettivo], ["Vincoli", d.vincoli], ["Dati", d.dati], ["Opzioni", d.opzioni],
+                ["Decisione presa", d.decisione], ["Refactoring", d.refactoring]]
+      .filter(([, v]) => v)
+      .map(([k, v]) => `<div class="qa"><b>${k}</b>${esc(v)}</div>`).join("") ||
+      '<p class="hint">Nessun dettaglio: apri ✏️ Modifica e compila le 4 domande.</p>';
+    return `<div class="card" data-dec="${d.id}">
+      <div class="dec-head" data-action="toggle-decisione" data-id="${d.id}">
+        <div class="grow">
+          <h3>${esc(d.titolo)}</h3>
+          <span class="hint">${esc(d.ambito)} · ${d.creata}</span>
+        </div>
+        <div class="dec-badges">
+          <span class="badge ${STATO_BADGE[d.stato]}">${d.stato}</span>
+          <span class="badge ${pr.cls}" title="urgenza ${d.urgenza} × impatto ${d.impatto}">P${pr.p} · ${pr.label}</span>
+        </div>
+      </div>
+      <div class="dec-body">
+        ${qa}
+        <div class="row" style="margin-top:var(--s2)">
+          <button class="btn ghost mini" type="button" data-action="modifica-decisione" data-id="${d.id}">✏️ Modifica</button>
+          <button class="btn ghost mini" type="button" data-action="chiedi-claude" data-id="${d.id}">📋 Chiedi a Claude</button>
+          <button class="btn danger mini" type="button" data-action="elimina-decisione" data-id="${d.id}">🗑 Elimina</button>
+        </div>
       </div>
     </div>`;
-  }).join("") + `</div>`;
-}
-
-/* ---------- decisioni (board per stato) ---------- */
-function renderDecisioni() {
-  renderBoard("lista-decisioni", DECISIONI_COLS,
-    key => db.decisioni.filter(d => d.stato === key).sort((a, b) => prioInfo(b).p - prioInfo(a).p),
-    d => {
-      const pr = prioInfo(d);
-      return `<div class="kcard" data-coll="decisioni" data-id="${d.id}">
-        <div class="kcard-title">${esc(d.titolo)}</div>
-        <div class="kcard-meta">${esc(d.ambito)} · ${d.creata}</div>
-        <span class="badge ${pr.cls}" title="urgenza ${d.urgenza} × impatto ${d.impatto}">P${pr.p} · ${pr.label}</span>
-        <div class="kcard-actions">
-          <button class="btn ghost mini icon-only" type="button" data-action="chiedi-claude" data-id="${d.id}" data-no-drag aria-label="Chiedi a Claude">📋</button>
-          <button class="btn danger mini icon-only" type="button" data-action="elimina-decisione" data-id="${d.id}" data-no-drag aria-label="Elimina">🗑</button>
-        </div>
-      </div>`;
-    });
+  }).join("");
 }
 function apriWizard(id) {
   const d = db.decisioni.find(x => x.id === id) || {};
@@ -529,7 +511,6 @@ function apriWizard(id) {
     $("w-" + f).value = d[f] || 3;
     $("w-" + f).nextElementSibling.value = d[f] || 3;
   }
-  $("w-del").style.display = id ? "" : "none";
   apriDialog("dlg-wizard");
 }
 function salvaDecisione() {
@@ -549,7 +530,7 @@ function salvaDecisione() {
   chiudiDialog("dlg-wizard");
 }
 
-/* ---------- KPI (board a colonne di stato, non trascinabile) ---------- */
+/* ---------- KPI ---------- */
 function statoKpi(k) {
   if (k.valore === null || k.valore === undefined || k.valore === "") return { cls: "b-brand", label: "n.d." };
   const v = +k.valore, t = +k.target, margine = Math.abs(t) * 0.05;
@@ -558,25 +539,22 @@ function statoKpi(k) {
   const vicino = k.direzione === ">=" ? v >= t - margine : v <= t + margine;
   return vicino ? { cls: "b-warn", label: "Attenzione" } : { cls: "b-bad", label: "Fuori target" };
 }
-const KPI_COLS = [
-  { key: "bad", label: "Fuori target" }, { key: "warn", label: "Attenzione" },
-  { key: "ok", label: "OK" }, { key: "nd", label: "Senza valore" }
-];
-function kpiBucket(k) {
-  const s = statoKpi(k);
-  return s.label === "Fuori target" ? "bad" : s.label === "Attenzione" ? "warn" : s.label === "OK" ? "ok" : "nd";
-}
 function renderKpi() {
-  renderBoard("lista-kpi", KPI_COLS,
-    key => db.kpi.filter(k => kpiBucket(k) === key),
-    k => `<div class="kcard" data-coll="kpi" data-id="${k.id}">
-      <div class="kcard-title">${esc(k.nome)}</div>
-      <div class="kcard-meta">target ${k.direzione === ">=" ? "≥" : "≤"} ${k.target}${esc(k.unita || "")}</div>
+  const box = $("lista-kpi");
+  if (!db.kpi.length) {
+    box.innerHTML = '<div class="empty">Nessun KPI. Aggiungi OTD, OEE, rotazione magazzino…</div>';
+    return;
+  }
+  box.innerHTML = db.kpi.map(k => {
+    const s = statoKpi(k);
+    return `<div class="kpi-row">
+      <div class="grow"><b>${esc(k.nome)}</b><br>
+        <span class="hint">target ${k.direzione === ">=" ? "≥" : "≤"} ${k.target}${esc(k.unita || "")}</span></div>
       <div class="kpi-val">${k.valore !== "" && k.valore != null ? esc(String(k.valore)) + esc(k.unita || "") : "—"}</div>
-      <div class="kcard-actions">
-        <button class="btn ghost mini icon-only" type="button" data-action="modifica-kpi" data-id="${k.id}" data-no-drag aria-label="Modifica ${esc(k.nome)}">✏️</button>
-      </div>
-    </div>`);
+      <span class="badge ${s.cls}">${s.label}</span>
+      <button class="btn ghost mini icon-only" type="button" data-action="modifica-kpi" data-id="${k.id}" aria-label="Modifica ${esc(k.nome)}">✏️</button>
+    </div>`;
+  }).join("");
 }
 function apriKpiDlg(id) {
   const k = db.kpi.find(x => x.id === id) || {};
@@ -602,7 +580,7 @@ function salvaKpi() {
   chiudiDialog("dlg-kpi");
 }
 
-/* ---------- agenda (board per giorno) ---------- */
+/* ---------- agenda (to-do calendarizzata) ---------- */
 function giornoOggi() {
   return GIORNI[(new Date().getDay() + 6) % 7];
 }
@@ -617,18 +595,33 @@ function renderChips() {
 }
 function renderAgenda() {
   renderChips();
-  const cols = giorniDaOggi().map(g => ({ key: g, label: g, today: g === giornoOggi() }));
-  renderBoard("lista-agenda", cols,
-    key => db.settimana.filter(t => t.giorno === key),
-    t => `<div class="kcard ${t.fatto ? "kcard-done" : ""}" data-coll="agenda" data-id="${t.id}">
-      ${t.cliente ? `<span class="t-cli">${esc(t.cliente)}</span>` : ""}
-      <div class="kcard-title">${esc(t.testo)}</div>
-      <div class="kcard-actions">
-        <button class="btn ghost mini icon-only" type="button" data-action="toggle-task" data-id="${t.id}" data-no-drag aria-label="${t.fatto ? "Riapri" : "Segna fatta"}">${t.fatto ? "↺" : "✓"}</button>
-        <button class="btn ghost mini icon-only" type="button" data-action="rimanda-task" data-id="${t.id}" data-no-drag aria-label="Sposta a domani" title="Sposta al giorno dopo">→</button>
-        <button class="btn danger mini icon-only" type="button" data-action="elimina-task" data-id="${t.id}" data-no-drag aria-label="Elimina">✕</button>
+  const box = $("lista-agenda");
+  box.innerHTML = giorniDaOggi().map(g => {
+    const tasks = db.settimana.filter(t => t.giorno === g);
+    const fatte = tasks.filter(t => t.fatto).length;
+    const oggi = g === giornoOggi();
+    const corpo = tasks.length ? tasks.map(t => `
+      <div class="task ${t.fatto ? "done" : ""}">
+        <input type="checkbox" ${t.fatto ? "checked" : ""} data-task="${t.id}" aria-label="Completata: ${esc(t.testo)}">
+        <div class="grow">
+          ${t.cliente ? `<span class="t-cli">${esc(t.cliente)}</span><br>` : ""}
+          <span class="t-text">${esc(t.testo)}</span>
+        </div>
+        <div class="t-actions">
+          <button class="btn ghost mini icon-only" type="button" data-action="rimanda-task" data-id="${t.id}" aria-label="Sposta a domani" title="Sposta al giorno dopo">→</button>
+          <button class="btn danger mini icon-only" type="button" data-action="elimina-task" data-id="${t.id}" aria-label="Elimina">✕</button>
+        </div>
+      </div>`).join("")
+      : `<p class="hint" style="padding:6px 0">Niente in agenda${oggi ? " per oggi" : ""}.</p>`;
+    return `<div class="day-card ${oggi ? "today" : ""}">
+      <div class="day-head">
+        <span class="day-name">${oggi ? "Oggi · " : ""}${g}</span>
+        <span class="day-count">${fatte}/${tasks.length}</span>
       </div>
-    </div>`);
+      ${tasks.length ? `<div class="progress"><i style="width:${tasks.length ? Math.round(fatte / tasks.length * 100) : 0}%"></i></div>` : ""}
+      ${corpo}
+    </div>`;
+  }).join("");
 }
 function aggiungiTask() {
   const testo = $("t-testo").value.trim();
@@ -642,88 +635,6 @@ function rimandaTask(id) {
   const t = db.settimana.find(x => x.id === id);
   t.giorno = GIORNI[(GIORNI.indexOf(t.giorno) + 1) % GIORNI.length];
   salva(); renderAgenda(); renderPlancia();
-}
-
-/* ---------- drag & drop (Pointer Events: mouse + touch, niente HTML5 DnD) ---------- */
-let drag = null;
-const SOGLIA_PX = 8;
-function iniziaDragListener() {
-  document.addEventListener("pointerdown", e => {
-    if (e.button !== undefined && e.button !== 0) return;
-    const card = e.target.closest(".kcard");
-    if (!card || card.dataset.coll === "kpi") return;
-    if (e.target.closest("[data-no-drag]")) return;
-    const rect = card.getBoundingClientRect();
-    drag = {
-      card, coll: card.dataset.coll, id: card.dataset.id,
-      startX: e.clientX, startY: e.clientY,
-      offX: e.clientX - rect.left, offY: e.clientY - rect.top,
-      w: rect.width, moved: false, ghost: null, targetCol: null
-    };
-    try { card.setPointerCapture(e.pointerId); } catch {}
-  });
-  document.addEventListener("pointermove", e => {
-    if (!drag) return;
-    const dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
-    if (!drag.moved && Math.hypot(dx, dy) > SOGLIA_PX) {
-      drag.moved = true;
-      const ghost = drag.card.cloneNode(true);
-      ghost.classList.add("kcard-ghost");
-      ghost.style.width = drag.w + "px";
-      document.body.appendChild(ghost);
-      drag.ghost = ghost;
-      drag.card.classList.add("kcard-source");
-    }
-    if (drag.moved) {
-      e.preventDefault();
-      // auto-scroll orizzontale della board quando si trascina vicino al bordo (mobile: colonne oltre lo schermo)
-      const row = drag.card.closest(".board-row");
-      if (row) {
-        const r = row.getBoundingClientRect(), EDGE = 46, STEP = 16;
-        if (e.clientX > r.right - EDGE) row.scrollLeft += STEP;
-        else if (e.clientX < r.left + EDGE) row.scrollLeft -= STEP;
-      }
-      drag.ghost.style.left = (e.clientX - drag.offX) + "px";
-      drag.ghost.style.top = (e.clientY - drag.offY) + "px";
-      drag.ghost.style.display = "none";
-      const under = document.elementFromPoint(e.clientX, e.clientY);
-      drag.ghost.style.display = "";
-      document.querySelectorAll(".board-col.drop-target").forEach(c => c.classList.remove("drop-target"));
-      const col = under && under.closest(".board-col");
-      if (col) col.classList.add("drop-target");
-      drag.targetCol = col;
-    }
-  });
-  function fineDrag(e) {
-    if (!drag) return;
-    const { moved, targetCol, coll, id, card } = drag;
-    if (drag.ghost) drag.ghost.remove();
-    card.classList.remove("kcard-source");
-    document.querySelectorAll(".board-col.drop-target").forEach(c => c.classList.remove("drop-target"));
-    if (moved && targetCol) spostaCard(coll, id, targetCol.dataset.col);
-    else if (!moved) apriDettaglioCard(coll, id);
-    drag = null;
-  }
-  document.addEventListener("pointerup", fineDrag);
-  document.addEventListener("pointercancel", fineDrag);
-}
-function spostaCard(coll, id, nuovaChiave) {
-  if (coll === "decisioni") {
-    const d = db.decisioni.find(x => x.id === id);
-    if (d && d.stato !== nuovaChiave) {
-      d.stato = nuovaChiave;
-      logEvento(`Decisione spostata in "${nuovaChiave}": ${d.titolo}`);
-      salva(); renderPlancia();
-    }
-    renderDecisioni();
-  } else if (coll === "agenda") {
-    const t = db.settimana.find(x => x.id === id);
-    if (t && t.giorno !== nuovaChiave) { t.giorno = nuovaChiave; salva(); renderPlancia(); }
-    renderAgenda();
-  }
-}
-function apriDettaglioCard(coll, id) {
-  if (coll === "decisioni") apriWizard(id);
 }
 
 /* ---------- report e prompt ---------- */
@@ -796,7 +707,7 @@ function comando(tipo) {
   switch (tipo) {
     case "decisione": t = buildExport(); break;
     case "lancio":
-      t = `/lancio-op — Genera il piano di produzione della settimana dal CSV che allego/incollo qui sotto.\n\nApplica le regole di contesto/regole-pianificazione.md:\n- accorpa OP per famiglia o descrizione simile con date consegna entro 2 giorni (anticipando, mai ritardando)\n- massimo 2 OP OBI (ordini quadro scorta, art. 26707 e 26708) a settimana, come riempitivo\n- gli OP senza data consegna sono kanban di reintegro scorta: scadenza max 10gg dalla generazione, accorpali con la stessa logica usando quella scadenza\n\nDammi: piano per giorno, accorpamenti fatti, OBI inserite/slittate, kanban reintegrati, criticità.\n\n[ALLEGA O INCOLLA QUI IL CSV DEGLI OP]`;
+      t = `/lancio-op — Genera il piano di produzione della settimana dal CSV che allego/incollo qui sotto.\n\nApplica le regole di contesto/regole-pianificazione.md:\n- accorpa OP per famiglia o descrizione simile con date consegna entro 2 giorni (anticipando, mai ritardando)\n- massimo 2 OP OBI (ordini quadro scorta, art. 26707 e 26708) a settimana, come riempitivo\n\nDammi: piano per giorno, accorpamenti fatti, OBI inserite/slittate, criticità.\n\n[ALLEGA O INCOLLA QUI IL CSV DEGLI OP]`;
       break;
     case "pianifica":
       t = `/pianifica-settimana — Stato attuale dal mio Decision Engine.\n\n## Agenda ancora aperta\n${pianoTxt}\n\n## Criticità aperte\n${db.decisioni.filter(d => d.stato === "aperta").map(testoDecisione).join("\n") || "Nessuna."}\n\n## KPI\n${kpiTxt}\n\nChiedimi solo ciò che manca (ordini, capacità, assenze), poi costruisci il piano.`;
@@ -823,8 +734,9 @@ function comando(tipo) {
 /* ---------- clipboard con fallback ---------- */
 function copiaTesto(testo, btn, etichetta) {
   const fatto = () => {
+    const orig = etichetta;
     btn.textContent = "✓ Copiato";
-    setTimeout(() => { btn.textContent = etichetta; }, 1600);
+    setTimeout(() => { btn.textContent = orig; }, 1600);
   };
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(testo).then(fatto).catch(() => copiaFallback(testo, fatto));
@@ -874,18 +786,13 @@ const AZIONI = {
   "svuota-log":        () => { db.log = []; salva(); renderLog(); },
   "nuova-decisione":   () => apriWizard(),
   "esporta-claude":    () => { mostraPrompt(buildExport()); logEvento("Prompt completo esportato"); },
+  "toggle-decisione":  el => el.closest(".card").classList.toggle("open"),
+  "modifica-decisione":el => apriWizard(el.dataset.id),
   "chiedi-claude":     el => { mostraPrompt(buildExport(el.dataset.id)); logEvento("Prompt singola criticità"); },
   "elimina-decisione": el => {
     if (!confirm("Eliminare questa decisione dal registro?")) return;
     db.decisioni = db.decisioni.filter(x => x.id !== el.dataset.id);
     salva(); renderDecisioni(); renderPlancia();
-  },
-  "elimina-decisione-dlg": () => {
-    const id = $("w-id").value;
-    if (!id || !confirm("Eliminare questa decisione dal registro?")) return;
-    db.decisioni = db.decisioni.filter(x => x.id !== id);
-    salva(); renderDecisioni(); renderPlancia();
-    chiudiDialog("dlg-wizard");
   },
   "nuovo-kpi":         () => apriKpiDlg(),
   "modifica-kpi":      el => apriKpiDlg(el.dataset.id),
@@ -899,10 +806,6 @@ const AZIONI = {
   "scegli-giorno":     el => { giornoSelezionato = el.dataset.giorno; renderChips(); },
   "aggiungi-task":     () => aggiungiTask(),
   "rimanda-task":      el => rimandaTask(el.dataset.id),
-  "toggle-task":       el => {
-    const t = db.settimana.find(x => x.id === el.dataset.id);
-    if (t) { t.fatto = !t.fatto; salva(); renderAgenda(); renderPlancia(); }
-  },
   "elimina-task":      el => {
     db.settimana = db.settimana.filter(x => x.id !== el.dataset.id);
     salva(); renderAgenda(); renderPlancia();
@@ -931,7 +834,13 @@ document.addEventListener("click", e => {
   const fn = AZIONI[el.dataset.action];
   if (fn) { e.preventDefault(); fn(el); }
 });
-document.addEventListener("change", e => { if (e.target.id === "file-import") importaJson(e.target); });
+document.addEventListener("change", e => {
+  if (e.target.dataset && e.target.dataset.task) {
+    const t = db.settimana.find(x => x.id === e.target.dataset.task);
+    if (t) { t.fatto = e.target.checked; salva(); renderAgenda(); renderPlancia(); }
+  }
+  if (e.target.id === "file-import") importaJson(e.target);
+});
 document.addEventListener("input", e => {
   if (e.target.type === "range" && e.target.nextElementSibling && e.target.nextElementSibling.tagName === "OUTPUT") {
     e.target.nextElementSibling.value = e.target.value;
@@ -962,7 +871,6 @@ if (!localStorage.getItem(KEY)) {
   ];
   salva();
 }
-iniziaDragListener();
 renderTutto();
 </script>
 </body>
