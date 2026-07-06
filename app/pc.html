@@ -118,7 +118,9 @@
   .log-item time { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
   /* ==================== PLANCIA DESKTOP: tessere + 2 colonne ==================== */
-  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s3); margin-bottom: var(--s3); }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s3); margin-bottom: var(--s3); }
+  .tile-split { display: flex; gap: var(--s4); align-items: baseline; }
+  .tile-split b { font-size: 1.5rem; font-weight: 800; }
   .tile {
     background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--line);
     border-radius: var(--r-md); padding: var(--s3) var(--s4); box-shadow: var(--shadow);
@@ -202,6 +204,11 @@
   .kcard.kcard-done .kcard-title { text-decoration: line-through; color: var(--muted); }
   .t-cli { display: inline-block; font-size: .66rem; font-weight: 800; color: var(--brand-ink); background: var(--brand-soft); border-radius: 5px; padding: 1px 6px; margin-bottom: 4px; }
   .kpi-val { font-variant-numeric: tabular-nums; font-weight: 800; font-size: .98rem; margin-top: 4px; }
+  .spark { display: flex; align-items: flex-end; gap: 2px; height: 28px; margin: 6px 0 2px; }
+  .spark-bar { width: 6px; min-height: 3px; border-radius: 2px 2px 0 0; }
+  .spark-bar.spark-bad { background: var(--bad); }
+  .spark-bar.spark-warn { background: var(--warn); }
+  .spark-bar.spark-ok { background: var(--ok); }
 
   .day-chips { display: flex; gap: 6px; flex-wrap: wrap; }
   .day-chips button {
@@ -657,17 +664,59 @@ function kpiBucket(k) {
   const s = statoKpi(k);
   return s.label === "Fuori target" ? "bad" : s.label === "Attenzione" ? "warn" : s.label === "OK" ? "ok" : "nd";
 }
-function renderKpi() {
-  renderBoard("lista-kpi", KPI_COLS,
-    key => db.kpi.filter(k => kpiBucket(k) === key),
-    k => `<div class="kcard" data-coll="kpi" data-id="${k.id}">
+function cellaBucket(perf) {
+  if (perf < 50) return "bad";
+  if (perf < 85) return "warn";
+  if (perf > 115) return "warn";
+  return "ok";
+}
+function storicoPerfPerCella(cellaKey, limit = 10) {
+  const arr = [];
+  for (const e of db.log) {
+    const m = PERF_LOG_RE.exec(e.m);
+    if (!m || m[1].trim().toLowerCase() !== cellaKey) continue;
+    arr.push(+m[2]);
+  }
+  return arr.slice(-limit);
+}
+function sparklineHtml(valori) {
+  if (!valori.length) return "";
+  const max = Math.max(150, ...valori);
+  return `<div class="spark">` + valori.map(v => {
+    const h = Math.max(10, Math.min(100, Math.round(v / max * 100)));
+    const cls = v < 50 ? "bad" : v < 85 ? "warn" : v > 115 ? "warn" : "ok";
+    return `<span class="spark-bar spark-${cls}" style="height:${h}%" title="${v}%"></span>`;
+  }).join("") + `</div>`;
+}
+function cellaCardHtml(c) {
+  const s = statoPerfCella(c.perf);
+  const storico = storicoPerfPerCella(c.cella.toLowerCase());
+  return `<div class="kcard" data-coll="perfcella" data-cella="${esc(c.cella)}">
+    <div class="kcard-title">📐 ${esc(c.cella)}</div>
+    <div class="kcard-meta">performance cella · ultimo calcolo ${esc(c.quando)}</div>
+    <div class="kpi-val">${c.perf}%</div>
+    ${sparklineHtml(storico)}
+    <span class="badge ${s.cls}">${s.label}</span>
+    <div class="kcard-actions">
+      <button class="btn ghost mini icon-only" type="button" data-action="apri-performance-cella" data-cella="${esc(c.cella)}" data-no-drag aria-label="Ricalcola ${esc(c.cella)}">🧮</button>
+    </div>
+  </div>`;
+}
+function kpiCardHtml(k) {
+  return `<div class="kcard" data-coll="kpi" data-id="${k.id}">
       <div class="kcard-title">${esc(k.nome)}</div>
       <div class="kcard-meta">target ${k.direzione === ">=" ? "≥" : "≤"} ${k.target}${esc(k.unita || "")}</div>
       <div class="kpi-val">${k.valore !== "" && k.valore != null ? esc(String(k.valore)) + esc(k.unita || "") : "—"}</div>
       <div class="kcard-actions">
         <button class="btn ghost mini icon-only" type="button" data-action="modifica-kpi" data-id="${k.id}" data-no-drag aria-label="Modifica ${esc(k.nome)}">✏️</button>
       </div>
-    </div>`);
+    </div>`;
+}
+function renderKpi() {
+  const celle = ultimiPerfPerCella();
+  renderBoard("lista-kpi", KPI_COLS,
+    key => [...db.kpi.filter(k => kpiBucket(k) === key), ...(key === "nd" ? [] : celle.filter(c => cellaBucket(c.perf) === key))],
+    item => item.cella !== undefined ? cellaCardHtml(item) : kpiCardHtml(item));
 }
 function apriKpiDlg(id) {
   const k = db.kpi.find(x => x.id === id) || {};
@@ -739,7 +788,7 @@ function iniziaDragListener() {
   document.addEventListener("pointerdown", e => {
     if (e.button !== undefined && e.button !== 0) return;
     const card = e.target.closest(".kcard");
-    if (!card || card.dataset.coll === "kpi") return;
+    if (!card || (card.dataset.coll !== "decisioni" && card.dataset.coll !== "agenda")) return;
     if (e.target.closest("[data-no-drag]")) return;
     const rect = card.getBoundingClientRect();
     drag = {
@@ -819,8 +868,8 @@ function renderChipsStaff() {
     `<button type="button" data-action="scegli-staff" data-n="${n}" aria-pressed="${String(n) === attivo}">${n} pers.</button>`
   ).join("");
 }
-function sceglieStaff(n) { $("p-nop").value = n; renderChipsStaff(); calcolaPerformance(); }
-function calcolaPerformance() {
+function sceglieStaff(n) { $("p-nop").value = n; renderChipsStaff(); calcolaPerformance({ registra: false }); }
+function calcolaPerformance(opts = {}) {
   const qta = +$("p-qta").value, prodh = +$("p-prodh").value, tmes = +$("p-tmes").value;
   const nopStr = $("p-nop").value.trim();
   const nop = nopStr !== "" ? +nopStr : null;
@@ -888,10 +937,17 @@ function calcolaPerformance() {
   html += `</div>`;
   box.innerHTML = html;
   ultimoPerf = { op, cella, qta, prodh, tmes, nop, standard, tUnit, tTeo, perf, delta, staffMsg };
-  logEvento("Performance cella calcolata: " + (cella || op || "-") + ` (${perf.toFixed(0)}%)`);
-  sincronizzaPerformanceLog();
-  salva();
-  renderBadgeSidebar();
+  // "registra" è true SOLO sul clic esplicito su "Calcola": muovere il selettore staffing o
+  // digitare un numero ricalcola dal vivo l'anteprima ma NON deve scrivere nel log — altrimenti
+  // ogni tentativo di organico genera una riga e "l'ultimo valore" della cella diventa casuale.
+  if (opts.registra) {
+    logEvento("Performance cella calcolata: " + (cella || op || "-") + ` (${perf.toFixed(0)}%)`);
+    sincronizzaPerformanceLog();
+    salva();
+    renderBadgeSidebar();
+    renderKpi();
+    if (document.getElementById("sec-plancia").classList.contains("active")) renderPlancia();
+  }
 }
 function promptPerformance() {
   if (!ultimoPerf) { alert("Prima calcola i valori con “Calcola”."); return; }
@@ -948,6 +1004,11 @@ function buildReport() {
   const kpiCrit = db.kpi.map(k => ({ k, s: statoKpi(k) })).filter(x => x.s.label === "Fuori target" || x.s.label === "Attenzione");
   t += `\nKPI: ${kpiCrit.length ? "" : "tutti a target (o senza valore)"}\n`;
   t += kpiCrit.map(({ k, s }) => `  • ${k.nome}: ${k.valore}${k.unita || ""} vs ${k.direzione === ">=" ? "≥" : "≤"} ${k.target}${k.unita || ""} → ${s.label}`).join("\n") + (kpiCrit.length ? "\n" : "");
+  const celleFuoriReport = ultimiPerfPerCella().filter(c => c.perf < 85 || c.perf > 115);
+  if (celleFuoriReport.length) {
+    t += `\nPERFORMANCE CELLE FUORI TARGET:\n`;
+    t += celleFuoriReport.map(c => `  • ${c.cella} fuori target: Performance registrata al ${c.perf}% (${statoPerfCella(c.perf).label})`).join("\n") + "\n";
+  }
   const oggiTasks = db.settimana.filter(x => x.giorno === giornoOggi() && !x.fatto);
   t += `\nAGENDA DI OGGI (${giornoOggi()}):\n`;
   t += oggiTasks.length ? oggiTasks.map(x => `  • ${x.cliente ? "[" + x.cliente + "] " : ""}${x.testo}`).join("\n") + "\n" : "  • niente in agenda\n";
@@ -1038,6 +1099,9 @@ function renderSummary() {
   const worstKpi = kpiFuori[0];
   const worstCella = [...celleFuori].sort((a, b) => Math.abs(a.perf - 100) - Math.abs(b.perf - 100)).reverse()[0];
   const sottotitoloKpi = worstKpi ? esc(worstKpi.nome) : (worstCella ? `${esc(worstCella.cella)} ${worstCella.perf}%` : "tutti a target");
+  const negative = celle.filter(c => c.perf < 85);
+  const positive = celle.filter(c => c.perf > 115);
+  const inTarget = celle.length - negative.length - positive.length;
 
   $("summary-grid").innerHTML = `
     <div class="tile ${critiche ? "t-bad" : "t-brand"}">
@@ -1059,6 +1123,14 @@ function renderSummary() {
       <div class="tile-lbl">Ultima attività</div>
       <div class="tile-val" style="font-size:1.25rem">${ultimo ? esc(ultimo.q) : "—"}</div>
       <div class="tile-sub">${ultimo ? esc(ultimo.m) : "nessuna attività registrata"}</div>
+    </div>
+    <div class="tile ${negative.length ? "t-bad" : "t-ok"}">
+      <div class="tile-lbl">Performance celle — positivo/negativo</div>
+      <div class="tile-split">
+        <span><b style="color:var(--bad)">▼ ${negative.length}</b> <small class="hint">sotto target</small></span>
+        <span><b style="color:var(--ok)">▲ ${positive.length}</b> <small class="hint">sopra target</small></span>
+      </div>
+      <div class="tile-sub">${inTarget} in target su ${celle.length} celle monitorate</div>
     </div>`;
 }
 function renderCoda() {
@@ -1236,6 +1308,14 @@ const AZIONI = {
     renderChipsStaff();
     apriDialog("dlg-perf");
   },
+  "apri-performance-cella": el => {
+    $("form-perf").reset();
+    $("perf-risultato").innerHTML = "";
+    ultimoPerf = null;
+    $("p-cella").value = el.dataset.cella;
+    renderChipsStaff();
+    apriDialog("dlg-perf");
+  },
   "perf-claude":       () => promptPerformance(),
   "scegli-staff":      el => sceglieStaff(+el.dataset.n)
 };
@@ -1251,11 +1331,11 @@ document.addEventListener("input", e => {
   if (e.target.type === "range" && e.target.nextElementSibling && e.target.nextElementSibling.tagName === "OUTPUT") {
     e.target.nextElementSibling.value = e.target.value;
   }
-  if (e.target.id === "p-nop" || e.target.id === "p-standard") calcolaPerformance();
+  if (e.target.id === "p-nop" || e.target.id === "p-standard") calcolaPerformance({ registra: false });
 });
 $("form-wizard").addEventListener("submit", e => { e.preventDefault(); salvaDecisione(); });
 $("form-kpi").addEventListener("submit", e => { e.preventDefault(); salvaKpi(); });
-$("form-perf").addEventListener("submit", e => { e.preventDefault(); calcolaPerformance(); });
+$("form-perf").addEventListener("submit", e => { e.preventDefault(); calcolaPerformance({ registra: true }); });
 $("t-testo").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); aggiungiTask(); } });
 
 function vai(tab) {
@@ -1264,6 +1344,7 @@ function vai(tab) {
   $("sec-" + tab).classList.add("active");
   $("nav-" + tab).setAttribute("aria-selected", "true");
   if (tab === "plancia") renderPlancia();
+  if (tab === "kpi") renderKpi();
 }
 
 function renderTutto() {
