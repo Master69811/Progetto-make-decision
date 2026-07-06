@@ -227,6 +227,7 @@
         <button type="button" data-action="comando" data-cmd="refactoring"><span class="cmd-t">🔁 Refactoring</span><span class="cmd-d">perché il problema non torni</span></button>
         <button type="button" data-action="comando" data-cmd="comunica"><span class="cmd-t">✍️ Comunicazione</span><span class="cmd-d">email/messaggi con la tua voce</span></button>
         <button type="button" data-action="comando" data-cmd="audit"><span class="cmd-t">🩺 Audit sistema</span><span class="cmd-d">voto al setup + modifica top</span></button>
+        <button type="button" data-action="apri-performance"><span class="cmd-t">📐 Performance cella</span><span class="cmd-d">OD vs MES: pezzi e ore-uomo</span></button>
       </div>
     </div>
 
@@ -406,6 +407,50 @@
   </form>
 </dialog>
 
+<!-- ==================== DIALOG: PERFORMANCE CELLA ==================== -->
+<dialog id="dlg-perf">
+  <form class="dlg-in" id="form-perf">
+    <h3>📐 Performance cella</h3>
+    <p class="steps">Confronta il tempo teorico da OD con l'effettivo da MES: pezzi e ore-uomo di impatto, calcolati subito qui, senza aspettare Claude.</p>
+    <label for="p-op">OP / riferimento</label>
+    <input id="p-op" placeholder="Es. 305090 fase 1924693">
+    <label for="p-cella">Cella di lavoro</label>
+    <input id="p-cella" placeholder="Es. LINEA ASSEMBLAGGIO POMPE PICCOLE AP1">
+    <div class="row">
+      <div class="grow">
+        <label for="p-qta">Quantità richiesta (PZ) *</label>
+        <input id="p-qta" required type="number" step="any" inputmode="decimal" placeholder="160">
+      </div>
+      <div class="grow">
+        <label for="p-prodh">Prod. oraria prevista (PZ/h) *</label>
+        <input id="p-prodh" required type="number" step="any" inputmode="decimal" placeholder="347">
+      </div>
+    </div>
+    <label for="p-tmes">Tempo effettivo MES (min tot.) *</label>
+    <input id="p-tmes" required type="number" step="any" inputmode="decimal" placeholder="Somma tutti gli intervalli">
+    <div class="row">
+      <div class="grow">
+        <label for="p-standard">Staffing standard di linea</label>
+        <input id="p-standard" type="number" step="any" inputmode="decimal" value="3">
+      </div>
+      <div class="grow">
+        <label for="p-nop">Operatori attivi ora (opz.)</label>
+        <input id="p-nop" type="number" step="any" inputmode="decimal" placeholder="Per le ore-uomo">
+      </div>
+    </div>
+    <label>Selettore rapido — ricalcola all'istante cambiando organico</label>
+    <div class="day-chips" id="chips-staff"></div>
+    <div id="perf-risultato"></div>
+    <div class="dlg-actions">
+      <button type="button" class="btn ghost" data-action="chiudi-dialog" data-dlg="dlg-perf">Chiudi</button>
+      <span class="row">
+        <button type="button" class="btn ghost mini" data-action="perf-claude">🧠 Approfondisci</button>
+        <button class="btn" type="submit">Calcola</button>
+      </span>
+    </div>
+  </form>
+</dialog>
+
 <!-- ==================== DIALOG: EXPORT ==================== -->
 <dialog id="dlg-export">
   <div class="dlg-in">
@@ -452,6 +497,7 @@ function salva() { localStorage.setItem(KEY, JSON.stringify(db)); }
 /* ---------- dialog helpers (con fallback se showModal manca) ---------- */
 function apriDialog(id) {
   const d = $(id);
+  if (d.open) return;
   if (typeof d.showModal === "function") d.showModal();
   else { d.setAttribute("open", ""); d.classList.add("fallback-open"); }
 }
@@ -726,6 +772,103 @@ function apriDettaglioCard(coll, id) {
   if (coll === "decisioni") apriWizard(id);
 }
 
+/* ---------- performance cella (OD vs MES): calcolo istantaneo, no round-trip Claude ---------- */
+let ultimoPerf = null;
+function renderChipsStaff() {
+  const attivo = $("p-nop").value.trim();
+  $("chips-staff").innerHTML = [1, 2, 3, 4, 5, 6].map(n =>
+    `<button type="button" data-action="scegli-staff" data-n="${n}" aria-pressed="${String(n) === attivo}">${n} pers.</button>`
+  ).join("");
+}
+function sceglieStaff(n) {
+  $("p-nop").value = n;
+  renderChipsStaff();
+  calcolaPerformance();
+}
+function calcolaPerformance() {
+  const qta = +$("p-qta").value, prodh = +$("p-prodh").value, tmes = +$("p-tmes").value;
+  const nopStr = $("p-nop").value.trim();
+  const nop = nopStr !== "" ? +nopStr : null;
+  const standardStr = $("p-standard").value.trim();
+  const standard = standardStr !== "" ? +standardStr : null;
+  renderChipsStaff();
+  const box = $("perf-risultato");
+  if (!qta || !prodh || !tmes) {
+    box.innerHTML = '<p class="hint" style="margin-top:var(--s2)">Compila quantità, produzione oraria e tempo MES.</p>';
+    ultimoPerf = null;
+    return;
+  }
+  const tUnit = 60 / prodh;
+  const tTeo = tUnit * qta;
+  const perf = (tTeo / tmes) * 100;
+  const delta = tmes - tTeo;
+  const cls = perf >= 95 ? "b-ok" : perf >= 75 ? "b-warn" : "b-bad";
+  const op = $("p-op").value.trim(), cella = $("p-cella").value.trim();
+
+  let html = `<div class="card" style="margin:var(--s3) 0 0;padding:var(--s3)">
+    <div class="row" style="justify-content:space-between">
+      <b>${esc(cella || op || "Cella")}</b>
+      <span class="badge ${cls}">${perf.toFixed(1)}% performance</span>
+    </div>
+    <div class="hint" style="margin-top:4px">Teorico ${tTeo.toFixed(1)} min · Effettivo ${tmes.toFixed(1)} min · Delta ${delta >= 0 ? "+" : ""}${delta.toFixed(1)} min</div>`;
+
+  let alert;
+  if (delta > 0.05) {
+    const pezziPersi = delta / tUnit;
+    html += `<div class="qa"><b>Impatto</b>⚠️ ${Math.round(pezziPersi)} pezzi equivalenti non prodotti</div>`;
+    if (nop) html += `<div class="qa"><b>Ore-uomo</b>+${((delta * nop) / 60).toFixed(2)}h consumate in eccesso (${nop} operatori)</div>`;
+    alert = perf < 60
+      ? "🔴 Performance sotto il 60%: è una criticità da aprire in Decisioni, non una nota."
+      : "🟠 Scostamento da verificare: micro-fermi, materiale mancante o sotto-organico.";
+  } else if (delta < -0.05) {
+    const pezziGuad = Math.abs(delta) / tUnit;
+    html += `<div class="qa"><b>Impatto</b>✅ +${Math.round(pezziGuad)} pezzi equivalenti guadagnati / capacità rilasciata</div>`;
+    if (nop) html += `<div class="qa"><b>Ore-uomo</b>−${((Math.abs(delta) * nop) / 60).toFixed(2)}h risparmiate (${nop} operatori)</div>`;
+    alert = "🟢 Extra-produzione: capacità liberata, valuta di anticipare l'OP successivo.";
+  } else {
+    html += `<div class="qa"><b>Impatto</b>Nessuno scostamento rilevante.</div>`;
+    alert = "🟢 Performance in linea.";
+  }
+  if (nop) {
+    html += `<div class="qa"><b>Bilanciamento ore-uomo</b>teoriche ${((tTeo * nop) / 60).toFixed(2)}h vs effettive ${((tmes * nop) / 60).toFixed(2)}h</div>`;
+  }
+  html += `<div class="qa" style="margin-top:6px"><b>Alert</b>${alert}</div>`;
+
+  // D. Ricalcolo dinamico staffing — confronto con lo standard di linea
+  let staffMsg = "";
+  if (nop && standard) {
+    const oreEffNop = (tmes * nop) / 60;
+    const oreEffStd = (tmes * standard) / 60;
+    const deltaOreStaff = oreEffNop - oreEffStd;
+    const segnoOre = deltaOreStaff >= 0 ? "+" : "";
+    html += `<div class="qa"><b>Ore-uomo effettive totali (${nop} pers.)</b>${oreEffNop.toFixed(2)}h · vs standard (${standard} pers.): ${segnoOre}${deltaOreStaff.toFixed(2)}h</div>`;
+    const deficitReale = 100 - perf;
+    if (nop < standard) {
+      const percFisiologica = ((standard - nop) / standard) * 100;
+      staffMsg = deficitReale > percFisiologica
+        ? `🟠 Sotto-staffing (${nop}/${standard} persone): calo fisiologico atteso ~${percFisiologica.toFixed(0)}%, ma il calo osservato (${deficitReale.toFixed(0)}%) lo supera — parte del problema non è spiegata dal solo organico.`
+        : `🟡 Sotto-staffing (${nop}/${standard} persone): calo fisiologico stimato ~${percFisiologica.toFixed(0)}%, compatibile con il calo osservato (${deficitReale.toFixed(0)}%).`;
+    } else if (nop > standard) {
+      staffMsg = `🟠 Sovra-staffing (${nop}/${standard} persone, +${nop - standard} extra): verifica se la produzione oraria è salita in proporzione — altrimenti è saturazione inefficiente, operatore extra senza incremento di resa.`;
+    } else {
+      staffMsg = `🟢 Organico allineato allo standard (${standard} persone).`;
+    }
+    html += `<div class="qa"><b>Bilanciamento staffing</b>${staffMsg}</div>`;
+  }
+  html += `</div>`;
+  box.innerHTML = html;
+  ultimoPerf = { op, cella, qta, prodh, tmes, nop, standard, tUnit, tTeo, perf, delta, staffMsg };
+  logEvento("Performance cella calcolata: " + (cella || op || "-") + ` (${perf.toFixed(0)}%)`);
+}
+function promptPerformance() {
+  if (!ultimoPerf) { alert("Prima calcola i valori con “Calcola”."); return; }
+  const d = ultimoPerf;
+  const staffTxt = d.nop && d.standard ? `\nStaffing: ${d.nop} operatori attivi vs standard ${d.standard} → ${d.staffMsg}` : "";
+  const t = `/performance-cella — Dati già calcolati dalla Decision Engine, approfondisci solo la diagnosi (non rifare la matematica).\n\nOP: ${d.op || "-"}\nCella: ${d.cella || "-"}\nQuantità richiesta: ${d.qta} PZ\nProd. oraria prevista: ${d.prodh} PZ/h\nTempo effettivo MES: ${d.tmes} min\nNumero operatori: ${d.nop ?? "non indicato"}${staffTxt}\n\nCalcolato: tempo teorico ${d.tTeo.toFixed(1)} min, performance ${d.perf.toFixed(1)}%, delta ${d.delta.toFixed(1)} min.\n\nDammi: causa più probabile dello scostamento e l'alert decisionale in una frase diretta. Se performance <60% o ricorrente sulla stessa cella, proponi di aprire /decisione.`;
+  mostraPrompt(t);
+  logEvento("Prompt approfondimento performance cella");
+}
+
 /* ---------- report e prompt ---------- */
 function testoDecisione(d) {
   const pr = prioInfo(d);
@@ -921,7 +1064,16 @@ const AZIONI = {
     db = VUOTO(); salva(); renderTutto();
   },
   "copia-export":      el => copiaTesto($("export-testo").textContent, el, "Copia negli appunti"),
-  "chiudi-dialog":     el => chiudiDialog(el.dataset.dlg)
+  "chiudi-dialog":     el => chiudiDialog(el.dataset.dlg),
+  "apri-performance":  () => {
+    $("form-perf").reset();
+    $("perf-risultato").innerHTML = "";
+    ultimoPerf = null;
+    renderChipsStaff();
+    apriDialog("dlg-perf");
+  },
+  "perf-claude":       () => promptPerformance(),
+  "scegli-staff":      el => sceglieStaff(+el.dataset.n)
 };
 
 /* ---------- delegazione eventi (niente handler inline) ---------- */
@@ -936,9 +1088,11 @@ document.addEventListener("input", e => {
   if (e.target.type === "range" && e.target.nextElementSibling && e.target.nextElementSibling.tagName === "OUTPUT") {
     e.target.nextElementSibling.value = e.target.value;
   }
+  if (e.target.id === "p-nop" || e.target.id === "p-standard") calcolaPerformance();
 });
 $("form-wizard").addEventListener("submit", e => { e.preventDefault(); salvaDecisione(); });
 $("form-kpi").addEventListener("submit", e => { e.preventDefault(); salvaKpi(); });
+$("form-perf").addEventListener("submit", e => { e.preventDefault(); calcolaPerformance(); });
 $("t-testo").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); aggiungiTask(); } });
 
 /* ---------- navigazione ---------- */

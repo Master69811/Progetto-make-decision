@@ -20,12 +20,12 @@ Le altre slide del carosello sono adattate così al lavoro di produzione:
 
 | Percorso | Cosa fa |
 |---|---|
-| `app/index.html` | **L'app operativa, vista board stile Trello.** Un solo file, funziona offline e da telefono, dati salvati sul dispositivo (localStorage). Decisioni e Agenda sono board a colonne trascinabili (Decisioni: Aperta→Decisa→Eseguita→Verificata; Agenda: colonne per giorno); KPI a colonne per stato (Fuori target/Attenzione/OK). Tab **Plancia** con report giornaliero, comandi a un clic e log sessioni; guida di stile, backup JSON. |
+| `app/index.html` | **L'app operativa, vista board stile Trello.** Un solo file, funziona offline e da telefono, dati salvati sul dispositivo (localStorage). Decisioni e Agenda sono board a colonne trascinabili (Decisioni: Aperta→Decisa→Eseguita→Verificata; Agenda: colonne per giorno); KPI a colonne per stato (Fuori target/Attenzione/OK). Tab **Plancia** con report giornaliero, comandi a un clic, log sessioni e **📐 Performance cella** (calcolatore OD vs MES: performance %, pezzi persi/guadagnati, ore-uomo, ricalcolo dinamico dello staffing con selettore rapido); guida di stile, backup JSON. |
 | `app/classic.html` | **Stessa app, vista a liste** (senza drag & drop): utile se preferisci scorrere elenchi invece di trascinare schede, o su schermi molto piccoli. Dati condivisi con `index.html` (stesso localStorage). |
 | `CLAUDE.md` | **Il cervello.** Il system prompt della Decision Engine: si attiva da solo in ogni sessione Claude aperta su questo repo — non serve più incollarlo. |
 | `contesto/profilo.md` | **La memoria fissa.** Ruolo, clienti (Mesto, Davines…), sistemi ERP/MES, KPI e vincoli ricorrenti. Compilarlo una volta = non rispiegare mai il contesto (riduzione token). |
 | `contesto/stile.md` | **La tua voce.** Guida di stile per email e messaggi: `/comunica` la usa per scrivere come te. |
-| `.claude/skills/` | **I comandi:** `/decisione`, `/pianifica-settimana`, `/lancio-op` (piano da CSV), `/kpi`, `/refactoring-processo`, `/comunica`, `/comunicazioni-batch`, `/audit-sistema`. |
+| `.claude/skills/` | **I comandi:** `/decisione`, `/pianifica-settimana`, `/lancio-op` (piano da CSV), `/kpi`, `/refactoring-processo`, `/comunica`, `/comunicazioni-batch`, `/audit-sistema`, `/performance-cella` (diagnosi scostamento OD/MES). |
 | `contesto/regole-pianificazione.md` | **Le regole di lancio OP.** Accorpamenti, vincoli OBI, formato CSV appreso: si aggiornano qui, mai rispiegate in chat. |
 | `decisioni/` | **Il registro.** Ogni decisione chiusa diventa un file da `TEMPLATE.md`: è la memoria storica del sistema. |
 

@@ -50,5 +50,6 @@ Le decisioni significative vanno archiviate in `decisioni/` usando `decisioni/TE
 - `/comunica` — scrive email e messaggi con la voce dell'utente (guida: `contesto/stile.md`).
 - `/comunicazioni-batch` — lotto di comunicazioni verificate (solleciti fornitori, aggiornamenti clienti): ricerca per destinatario + controllo di ogni bozza.
 - `/audit-sistema` — voto periodico a tutto il setup: cosa sistemare, unire, eliminare, e l'unica modifica che rende di più.
+- `/performance-cella` — diagnosi Lean di uno scostamento OD vs MES (performance %, pezzi persi/guadagnati, ore-uomo, bilanciamento staffing). Il calcolo dei numeri va fatto nell'app (📐 Performance cella, istantaneo); questo comando serve per approfondire la causa quando i dati arrivano già calcolati.
 
 I prompt che arrivano dall'app (`app/index.html`, pulsanti "Comandi a un clic" o "Esporta per Claude") contengono già lo stato operativo: non richiedere dati che sono già nel prompt.
