@@ -915,7 +915,7 @@ function promptPerformance() {
    La chiave API vive solo in localStorage (db.geminiKey), mai nel codice:
    l'utente la incolla una volta in Sistema. Legge lo screenshot del log
    MES, somma le durate di tutte le righe e precompila Tempo Linea Totale. */
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_PROMPT_MES = `Analizza questo screenshot di un log MES (Manufacturing Execution System) di produzione. Ogni riga della tabella è un intervallo di lavorazione di un operatore su una fase di un OP (colonne tipiche: Inizio, Fine, Durata, OP, Fase, Operatore, Cella). Estrai i dati e calcola il "Tempo Linea Totale" in minuti come SOMMA di tutte le durate di TUTTE le righe visibili nella tabella (anche se gli intervalli si sovrappongono nel tempo: rappresentano ore-uomo di più operatori sulla stessa linea/cella e vanno sommate, non ridotte a un solo intervallo). Converti ogni durata (es. "3h-12m-35s") in minuti decimali prima di sommare.
 
 Rispondi SOLO con un oggetto JSON valido, senza testo intorno né blocchi di codice, con esattamente questo schema:
@@ -947,6 +947,7 @@ async function analizzaScreenshotMes() {
       })
     });
     if (!res.ok) {
+      if (res.status === 429) throw new Error("Quota gratuita Gemini esaurita per oggi (il piano free ha un limite giornaliero molto basso). Riprova più tardi — si azzera a mezzanotte fuso orario USA Pacifico — oppure abilita la fatturazione sul progetto in Google AI Studio per un limite molto più alto.");
       const errTxt = await res.text().catch(() => "");
       throw new Error(`Gemini ha risposto ${res.status}${errTxt ? ": " + errTxt.slice(0, 200) : ""}`);
     }
@@ -1026,6 +1027,7 @@ async function generaPianoDaCsv() {
       })
     });
     if (!res.ok) {
+      if (res.status === 429) throw new Error("Quota gratuita Gemini esaurita per oggi (il piano free ha un limite giornaliero molto basso). Riprova più tardi — si azzera a mezzanotte fuso orario USA Pacifico — oppure abilita la fatturazione sul progetto in Google AI Studio per un limite molto più alto.");
       const errTxt = await res.text().catch(() => "");
       throw new Error(`Gemini ha risposto ${res.status}${errTxt ? ": " + errTxt.slice(0, 200) : ""}`);
     }
@@ -1077,6 +1079,7 @@ async function inviaChat() {
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
     if (!res.ok) {
+      if (res.status === 429) throw new Error("Quota gratuita Gemini esaurita per oggi (il piano free ha un limite giornaliero molto basso). Riprova più tardi — si azzera a mezzanotte fuso orario USA Pacifico — oppure abilita la fatturazione sul progetto in Google AI Studio per un limite molto più alto.");
       const errTxt = await res.text().catch(() => "");
       throw new Error(`Gemini ha risposto ${res.status}${errTxt ? ": " + errTxt.slice(0, 200) : ""}`);
     }
