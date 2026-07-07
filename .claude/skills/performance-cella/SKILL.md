@@ -54,3 +54,7 @@ Incrocia con `contesto/profilo.md` e buon senso Lean per la causa più probabile
 5. **ALERT DECISIONALE**: una frase diretta, senza giri di parole (es. "La linea ha impiegato 3 volte il tempo previsto: verificare mancato carico pezzi su MES o fermo su AP1.")
 
 Se la performance è sotto soglia critica o si ripete sulla stessa cella, proponi di aprire `/decisione` o di registrare un refactoring in `decisioni/`.
+
+## 5. Correzione tempo ciclo a gestionale
+
+L'app calcola già in automatico (sezione "Tempo ciclo a gestionale" del calcolatore) se lo scostamento è ricorrente (≥3 letture coerenti nello storico della stessa cella) e in tal caso suggerisce la Prod. oraria corretta da riportare a gestionale. Se il prompt arriva con questo dato già presente, non ricalcolarlo: usalo per raccomandare o meno la correzione a gestionale, spiegando il perché in una riga.

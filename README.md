@@ -26,7 +26,15 @@ Le tre pagine app condividono **la stessa logica, le stesse correzioni e lo stes
 | `app/classic.html` | **Stessa app, vista a liste** (senza drag & drop): utile se preferisci scorrere elenchi invece di trascinare schede, o su schermi molto piccoli. Dati salvati separatamente (proprio localStorage di pagina). |
 | `app/pc.html` | **Stessa app, solo desktop** (senza il collasso della sidebar da telefono): pensata per la postazione fissa in ufficio, schermo largo e mouse. Dati salvati separatamente. |
 
-Il log delle "Performance cella" (registrato **solo** sul clic esplicito su **Calcola**, mai durante l'anteprima dal vivo dello staffing) alimenta in automatico, in tutte e tre le pagine: la board/lista KPI (le celle diventano schede/righe con sparkline, soglia target 85-115%), il Report di oggi, e le Decisioni aperte — sotto il 50% si apre da sola una criticità e il comando "Decidi criticità" punta dritto al prompt di approfondimento di quella cella finché resta la priorità più alta.
+Il log delle "Performance cella" (registrato **solo** sul clic esplicito su **Calcola**, mai durante l'anteprima dal vivo dello staffing) alimenta in automatico, in tutte e tre le pagine: la board/lista KPI (le celle diventano schede/righe con sparkline, soglia target 85-115%), il Report di oggi, e le Decisioni aperte — sotto il 50% si apre da sola una criticità e il comando "Decidi criticità" punta dritto al prompt di approfondimento di quella cella finché resta la priorità più alta. Il calcolatore mostra anche lo **storico controlli** della cella e, se lo scostamento dal ciclo è ricorrente (non isolato), suggerisce la Prod. oraria corretta da riportare a gestionale.
+
+### Funzioni con Gemini (opzionali)
+
+Tutte e tre le pagine integrano l'API Gemini per compiti che il solo JavaScript non può fare. Serve una chiave personale (gratuita su [aistudio.google.com/apikey](https://aistudio.google.com/apikey)) incollata una volta in **Sistema → Chiave API Gemini**: resta solo nel localStorage del browser, mai nel codice del sito.
+
+- **📷 Analizza screenshot MES** (dentro 📐 Performance cella): carica la foto/screenshot del log MES, Gemini legge le righe Inizio/Fine/Durata per operatore e precompila OP, Cella e Tempo Linea Totale.
+- **📊 Genera piano Excel** (Comandi a un clic): carica il CSV di estrazione ERP degli OP, Gemini applica le regole di `contesto/regole-pianificazione.md` (accorpamento, OBI, kanban) e produce un file `.xlsx` scaricabile con i fogli "Mancanti" e "Schedulazione" per ogni linea — generato in browser, nessun upload a server esterni oltre a Gemini.
+- **💬 Chiedi a Gemini** (in Plancia): chat con contesto automatico delle decisioni/KPI/agenda correnti, per domande rapide sullo stato della produzione.
 | `CLAUDE.md` | **Il cervello.** Il system prompt della Decision Engine: si attiva da solo in ogni sessione Claude aperta su questo repo — non serve più incollarlo. |
 | `contesto/profilo.md` | **La memoria fissa.** Ruolo, clienti (Mesto, Davines…), sistemi ERP/MES, KPI e vincoli ricorrenti. Compilarlo una volta = non rispiegare mai il contesto (riduzione token). |
 | `contesto/stile.md` | **La tua voce.** Guida di stile per email e messaggi: `/comunica` la usa per scrivere come te. |

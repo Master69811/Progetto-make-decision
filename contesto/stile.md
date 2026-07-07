@@ -7,21 +7,25 @@
 
 ## Tono
 
-- [es. diretto, professionale ma non formale, zero giri di parole]
+- Diretto, umano, professionale ma non formale. Frasi brevi e incisive.
+- Non accomodante all'eccesso: si può dire chiaramente che qualcosa non va.
 
 ## Struttura tipica
 
-- [es. prima la richiesta o il fatto, poi il contesto in 1–2 righe]
-- [es. una sola richiesta per messaggio, con data esplicita]
+- BLUF (Bottom Line Up Front): la richiesta o il fatto principale nelle prime due righe, gli approfondimenti dopo.
+- Una sola richiesta per messaggio, con data/scadenza esplicita quando c'è.
+- Chiude sempre con un prossimo passo concreto (una singola azione, non un elenco di opzioni senza priorità).
 
 ## Aperture e chiusure
 
-- Apertura tipica: [es. "Buongiorno Marco," — mai "Spett.le ditta"]
-- Chiusura tipica: [es. "Grazie, resto in attesa di conferma entro giovedì. Andrea"]
+- Apertura tipica: diretta al punto, niente "Spett.le ditta" o formule d'apertura lunghe.
+- Chiusura tipica: richiesta/CTA chiara + entro quando.
 
 ## Cose che NON scrivo mai
 
-- [es. formule tipo "come da accordi intercorsi", emoji nelle email ai clienti]
+- Introduzioni inutili, formule generiche ("come da accordi intercorsi"), linguaggio artificiale, ripetizioni, conclusioni standard.
+- Massimo 1–2 emoji per dare ritmo, mai di più.
+- Mai inventare dati o numeri mancanti: se manca un'informazione lo dico chiaramente, invece di supporre.
 
 ## Differenze per canale
 
