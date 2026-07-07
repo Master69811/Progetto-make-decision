@@ -361,6 +361,12 @@
           <div style="margin-top:var(--s2)"><button class="btn mini" type="button" data-action="salva-stile">Salva stile</button></div>
         </div>
         <div class="card">
+          <div class="card-head"><h2>🔑 Chiave API Gemini</h2></div>
+          <p class="hint" style="margin-bottom:8px">Serve solo per "🔎 Analizza con Gemini" nel calcolatore Performance cella (legge lo screenshot del log MES e somma le durate). Resta salvata <b>solo in questo browser</b> (localStorage): non viene mai scritta nel codice del sito né caricata su GitHub. Ottienila su <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.</p>
+          <input id="gemini-key" type="password" autocomplete="off" placeholder="Incolla qui la tua chiave API Gemini">
+          <div style="margin-top:var(--s2)"><button class="btn mini" type="button" data-action="salva-gemini-key">Salva chiave</button></div>
+        </div>
+        <div class="card">
           <div class="card-head"><h2>💾 Backup e dati</h2></div>
           <p class="hint" style="margin-bottom:8px">I dati vivono solo su questo browser (localStorage). Esporta un backup prima di cambiare postazione.</p>
           <div class="row">
@@ -478,6 +484,12 @@
     <input id="p-op" placeholder="Es. 305090 fase 1924693">
     <label for="p-cella">Cella di lavoro</label>
     <input id="p-cella" placeholder="Es. LINEA ASSEMBLAGGIO POMPE PICCOLE AP1">
+    <label for="p-img">📷 Screenshot log MES (opzionale)</label>
+    <div class="row">
+      <input type="file" id="p-img" accept="image/*" class="grow">
+      <button type="button" class="btn ghost mini" data-action="analizza-screenshot" style="flex:none">🔎 Analizza con Gemini</button>
+    </div>
+    <p class="hint" id="p-analisi-stato" style="margin-top:4px"></p>
     <div class="row">
       <div class="grow">
         <label for="p-qta">Quantità richiesta (PZ) *</label>
@@ -543,7 +555,7 @@ const $ = id => document.getElementById(id);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const esc = s => (s || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-function VUOTO() { return { decisioni: [], kpi: [], settimana: [], stile: "", log: [] }; }
+function VUOTO() { return { decisioni: [], kpi: [], settimana: [], stile: "", log: [], geminiKey: "" }; }
 function carica() {
   try { return Object.assign(VUOTO(), JSON.parse(localStorage.getItem(KEY) || "{}")); }
   catch { return VUOTO(); }
@@ -959,6 +971,62 @@ function promptPerformance() {
   logEvento("Prompt approfondimento performance cella");
 }
 
+/* ---------- analisi screenshot MES via Gemini (opzionale) ----------
+   La chiave API vive solo in localStorage (db.geminiKey), mai nel codice:
+   l'utente la incolla una volta in Sistema. Legge lo screenshot del log
+   MES, somma le durate di tutte le righe e precompila Tempo Linea Totale. */
+const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_PROMPT_MES = `Analizza questo screenshot di un log MES (Manufacturing Execution System) di produzione. Ogni riga della tabella è un intervallo di lavorazione di un operatore su una fase di un OP (colonne tipiche: Inizio, Fine, Durata, OP, Fase, Operatore, Cella). Estrai i dati e calcola il "Tempo Linea Totale" in minuti come SOMMA di tutte le durate di TUTTE le righe visibili nella tabella (anche se gli intervalli si sovrappongono nel tempo: rappresentano ore-uomo di più operatori sulla stessa linea/cella e vanno sommate, non ridotte a un solo intervallo). Converti ogni durata (es. "3h-12m-35s") in minuti decimali prima di sommare.
+
+Rispondi SOLO con un oggetto JSON valido, senza testo intorno né blocchi di codice, con esattamente questo schema:
+{"op": string|null, "fase": string|null, "cella": string|null, "righe": [{"operatore": string|null, "durataMin": number}], "tempoLineaTotaleMin": number}`;
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+    reader.onerror = () => reject(new Error("Impossibile leggere il file"));
+    reader.readAsDataURL(file);
+  });
+}
+async function analizzaScreenshotMes() {
+  const stato = $("p-analisi-stato");
+  const key = (db.geminiKey || "").trim();
+  if (!key) { stato.textContent = "⚠️ Configura prima la chiave API Gemini nella scheda Sistema."; return; }
+  const file = $("p-img").files[0];
+  if (!file) { stato.textContent = "⚠️ Carica prima uno screenshot del log MES."; return; }
+  stato.textContent = "⏳ Analisi in corso…";
+  try {
+    const base64 = await fileToBase64(file);
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: GEMINI_PROMPT_MES }, { inline_data: { mime_type: file.type || "image/png", data: base64 } }] }],
+        generationConfig: { responseMimeType: "application/json" }
+      })
+    });
+    if (!res.ok) {
+      const errTxt = await res.text().catch(() => "");
+      throw new Error(`Gemini ha risposto ${res.status}${errTxt ? ": " + errTxt.slice(0, 200) : ""}`);
+    }
+    const data = await res.json();
+    const testo = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!testo) throw new Error("Risposta vuota da Gemini.");
+    const pulito = testo.trim().replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/```\s*$/, "");
+    const estratto = JSON.parse(pulito);
+    if (estratto.op) $("p-op").value = estratto.op;
+    if (estratto.cella) $("p-cella").value = estratto.cella;
+    if (typeof estratto.tempoLineaTotaleMin === "number") $("p-tmes").value = Math.round(estratto.tempoLineaTotaleMin * 10) / 10;
+    const nRighe = Array.isArray(estratto.righe) ? estratto.righe.length : 0;
+    stato.textContent = `✅ Lette ${nRighe} righe · Tempo Linea Totale = ${estratto.tempoLineaTotaleMin ?? "?"} min. Controlla i valori, poi completa quantità e prod. oraria prima di Calcola.`;
+    logEvento("Screenshot MES analizzato con Gemini" + (estratto.cella ? ": " + estratto.cella : ""));
+    calcolaPerformance({ registra: false });
+  } catch (e) {
+    stato.textContent = "❌ Analisi non riuscita: " + e.message;
+  }
+}
+
 /* ---------- report e prompt ---------- */
 function testoDecisione(d) {
   const pr = prioInfo(d);
@@ -1294,6 +1362,11 @@ const AZIONI = {
     el.textContent = "✓ Salvato";
     setTimeout(() => { el.textContent = "Salva stile"; }, 1600);
   },
+  "salva-gemini-key":  el => {
+    db.geminiKey = $("gemini-key").value.trim(); salva();
+    el.textContent = "✓ Salvata";
+    setTimeout(() => { el.textContent = "Salva chiave"; }, 1600);
+  },
   "backup":            () => backupJson(),
   "importa":           () => $("file-import").click(),
   "azzera":            () => {
@@ -1305,6 +1378,7 @@ const AZIONI = {
   "apri-performance":  () => {
     $("form-perf").reset();
     $("perf-risultato").innerHTML = "";
+    $("p-analisi-stato").textContent = "";
     ultimoPerf = null;
     renderChipsStaff();
     apriDialog("dlg-perf");
@@ -1312,12 +1386,14 @@ const AZIONI = {
   "apri-performance-cella": el => {
     $("form-perf").reset();
     $("perf-risultato").innerHTML = "";
+    $("p-analisi-stato").textContent = "";
     ultimoPerf = null;
     $("p-cella").value = el.dataset.cella;
     renderChipsStaff();
     apriDialog("dlg-perf");
   },
   "perf-claude":       () => promptPerformance(),
+  "analizza-screenshot": () => analizzaScreenshotMes(),
   "scegli-staff":      el => sceglieStaff(+el.dataset.n)
 };
 
@@ -1352,6 +1428,7 @@ function vai(tab) {
 function renderTutto() {
   renderDecisioni(); renderKpi(); renderAgenda(); renderPlancia();
   $("stile-testo").value = db.stile || "";
+  $("gemini-key").value = db.geminiKey || "";
 }
 if (!localStorage.getItem(KEY)) {
   db.kpi = [
