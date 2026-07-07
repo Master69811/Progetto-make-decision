@@ -171,6 +171,11 @@
   .kcard.kcard-done .kcard-title { text-decoration: line-through; color: var(--muted); }
   .t-cli { display: inline-block; font-size: .68rem; font-weight: 800; color: var(--brand-ink); background: var(--brand-soft); border-radius: 5px; padding: 1px 6px; margin-bottom: 4px; }
   .kpi-val { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1rem; margin-top: 4px; }
+  .spark { display: flex; align-items: flex-end; gap: 2px; height: 28px; margin: 6px 0 2px; }
+  .spark-bar { width: 6px; min-height: 3px; border-radius: 2px 2px 0 0; }
+  .spark-bar.spark-bad { background: var(--bad); }
+  .spark-bar.spark-warn { background: var(--warn); }
+  .spark-bar.spark-ok { background: var(--ok); }
 
   .day-chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px; -webkit-overflow-scrolling: touch; }
   .day-chips button {
@@ -612,17 +617,59 @@ function kpiBucket(k) {
   const s = statoKpi(k);
   return s.label === "Fuori target" ? "bad" : s.label === "Attenzione" ? "warn" : s.label === "OK" ? "ok" : "nd";
 }
-function renderKpi() {
-  renderBoard("lista-kpi", KPI_COLS,
-    key => db.kpi.filter(k => kpiBucket(k) === key),
-    k => `<div class="kcard" data-coll="kpi" data-id="${k.id}">
+function cellaBucket(perf) {
+  if (perf < 50) return "bad";
+  if (perf < 85) return "warn";
+  if (perf > 115) return "warn";
+  return "ok";
+}
+function storicoPerfPerCella(cellaKey, limit = 10) {
+  const arr = [];
+  for (const e of db.log) {
+    const m = PERF_LOG_RE.exec(e.m);
+    if (!m || m[1].trim().toLowerCase() !== cellaKey) continue;
+    arr.push(+m[2]);
+  }
+  return arr.slice(-limit);
+}
+function sparklineHtml(valori) {
+  if (!valori.length) return "";
+  const max = Math.max(150, ...valori);
+  return `<div class="spark">` + valori.map(v => {
+    const h = Math.max(10, Math.min(100, Math.round(v / max * 100)));
+    const cls = v < 50 ? "bad" : v < 85 ? "warn" : v > 115 ? "warn" : "ok";
+    return `<span class="spark-bar spark-${cls}" style="height:${h}%" title="${v}%"></span>`;
+  }).join("") + `</div>`;
+}
+function cellaCardHtml(c) {
+  const s = statoPerfCella(c.perf);
+  const storico = storicoPerfPerCella(c.cella.toLowerCase());
+  return `<div class="kcard" data-coll="perfcella" data-cella="${esc(c.cella)}">
+    <div class="kcard-title">📐 ${esc(c.cella)}</div>
+    <div class="kcard-meta">performance cella · ultimo calcolo ${esc(c.quando)}</div>
+    <div class="kpi-val">${c.perf}%</div>
+    ${sparklineHtml(storico)}
+    <span class="badge ${s.cls}">${s.label}</span>
+    <div class="kcard-actions">
+      <button class="btn ghost mini icon-only" type="button" data-action="apri-performance-cella" data-cella="${esc(c.cella)}" data-no-drag aria-label="Ricalcola ${esc(c.cella)}">🧮</button>
+    </div>
+  </div>`;
+}
+function kpiCardHtml(k) {
+  return `<div class="kcard" data-coll="kpi" data-id="${k.id}">
       <div class="kcard-title">${esc(k.nome)}</div>
       <div class="kcard-meta">target ${k.direzione === ">=" ? "≥" : "≤"} ${k.target}${esc(k.unita || "")}</div>
       <div class="kpi-val">${k.valore !== "" && k.valore != null ? esc(String(k.valore)) + esc(k.unita || "") : "—"}</div>
       <div class="kcard-actions">
         <button class="btn ghost mini icon-only" type="button" data-action="modifica-kpi" data-id="${k.id}" data-no-drag aria-label="Modifica ${esc(k.nome)}">✏️</button>
       </div>
-    </div>`);
+    </div>`;
+}
+function renderKpi() {
+  const celle = ultimiPerfPerCella();
+  renderBoard("lista-kpi", KPI_COLS,
+    key => [...db.kpi.filter(k => kpiBucket(k) === key), ...(key === "nd" ? [] : celle.filter(c => cellaBucket(c.perf) === key))],
+    item => item.cella !== undefined ? cellaCardHtml(item) : kpiCardHtml(item));
 }
 function apriKpiDlg(id) {
   const k = db.kpi.find(x => x.id === id) || {};
@@ -697,7 +744,7 @@ function iniziaDragListener() {
   document.addEventListener("pointerdown", e => {
     if (e.button !== undefined && e.button !== 0) return;
     const card = e.target.closest(".kcard");
-    if (!card || card.dataset.coll === "kpi") return;
+    if (!card || (card.dataset.coll !== "decisioni" && card.dataset.coll !== "agenda")) return;
     if (e.target.closest("[data-no-drag]")) return;
     const rect = card.getBoundingClientRect();
     drag = {
@@ -783,9 +830,9 @@ function renderChipsStaff() {
 function sceglieStaff(n) {
   $("p-nop").value = n;
   renderChipsStaff();
-  calcolaPerformance();
+  calcolaPerformance({ registra: false });
 }
-function calcolaPerformance() {
+function calcolaPerformance(opts = {}) {
   const qta = +$("p-qta").value, prodh = +$("p-prodh").value, tmes = +$("p-tmes").value;
   const nopStr = $("p-nop").value.trim();
   const nop = nopStr !== "" ? +nopStr : null;
@@ -810,7 +857,7 @@ function calcolaPerformance() {
       <b>${esc(cella || op || "Cella")}</b>
       <span class="badge ${cls}">${perf.toFixed(1)}% performance</span>
     </div>
-    <div class="hint" style="margin-top:4px">Teorico ${tTeo.toFixed(1)} min · Effettivo ${tmes.toFixed(1)} min · Delta ${delta >= 0 ? "+" : ""}${delta.toFixed(1)} min</div>`;
+    <div class="hint" style="margin-top:4px">Teorico ${tTeo.toFixed(1)} min · Tempo Linea Totale ${tmes.toFixed(1)} min · Delta ${delta >= 0 ? "+" : ""}${delta.toFixed(1)} min</div>`;
 
   let alert;
   if (delta > 0.05) {
@@ -858,7 +905,15 @@ function calcolaPerformance() {
   html += `</div>`;
   box.innerHTML = html;
   ultimoPerf = { op, cella, qta, prodh, tmes, nop, standard, tUnit, tTeo, perf, delta, staffMsg };
-  logEvento("Performance cella calcolata: " + (cella || op || "-") + ` (${perf.toFixed(0)}%)`);
+  // "registra" è true SOLO sul clic esplicito su "Calcola": il ricalcolo dal vivo dello
+  // staffing (chip o digitazione) resta un'anteprima e non deve scrivere nel log.
+  if (opts.registra) {
+    logEvento("Performance cella calcolata: " + (cella || op || "-") + ` (${perf.toFixed(0)}%)`);
+    sincronizzaPerformanceLog();
+    salva();
+    renderKpi();
+    renderPlancia();
+  }
 }
 function promptPerformance() {
   if (!ultimoPerf) { alert("Prima calcola i valori con “Calcola”."); return; }
@@ -867,6 +922,52 @@ function promptPerformance() {
   const t = `/performance-cella — Dati già calcolati dalla Decision Engine, approfondisci solo la diagnosi (non rifare la matematica).\n\nOP: ${d.op || "-"}\nCella: ${d.cella || "-"}\nQuantità richiesta: ${d.qta} PZ\nProd. oraria prevista: ${d.prodh} PZ/h\nTempo Linea Totale (MES): ${d.tmes} min\nNumero operatori: ${d.nop ?? "non indicato"}${staffTxt}\n\nCalcolato: tempo teorico ${d.tTeo.toFixed(1)} min, performance ${d.perf.toFixed(1)}%, delta ${d.delta.toFixed(1)} min.\n\nDammi: causa più probabile dello scostamento e l'alert decisionale in una frase diretta. Se performance <60% o ricorrente sulla stessa cella, proponi di aprire /decisione.`;
   mostraPrompt(t);
   logEvento("Prompt approfondimento performance cella");
+}
+
+/* ---------- performance cella → KPI globali / report / decisioni aperte ----------
+   Ogni "Performance cella calcolata: [cella] ([%])" nel log alimenta lo stato
+   globale: soglia 85-115% = in target; sotto/sopra = fuori target; sotto 50% =
+   critico → apre in automatico una decisione e finisce nel report. */
+const PERF_LOG_RE = /^Performance cella calcolata: (.+?) \((\d+)%\)$/;
+function ultimiPerfPerCella() {
+  const map = new Map();
+  for (const e of db.log) {
+    const m = PERF_LOG_RE.exec(e.m);
+    if (!m) continue;
+    const cella = m[1].trim();
+    map.set(cella.toLowerCase(), { cella, perf: +m[2], quando: e.q });
+  }
+  return [...map.values()];
+}
+function statoPerfCella(perf) {
+  if (perf < 50) return { cls: "b-bad", label: "Critico" };
+  if (perf < 85) return { cls: "b-warn", label: "Sotto target" };
+  if (perf > 115) return { cls: "b-warn", label: "Anomalia" };
+  return { cls: "b-ok", label: "In target" };
+}
+function idAutoPerf(cella) { return "perf-" + cella.toLowerCase().replace(/[^a-z0-9]+/g, "-"); }
+function sincronizzaPerformanceLog() {
+  for (const c of ultimiPerfPerCella()) {
+    const id = idAutoPerf(c.cella);
+    const esistente = db.decisioni.find(d => d.id === id);
+    const critico = c.perf < 50;
+    if (critico) {
+      const titolo = `${c.cella} fuori target: Performance registrata al ${c.perf}%`;
+      const dati = `Performance cella ${c.cella}: ${c.perf}% (rilevato ${c.quando}). Soglia critica <50%. Verificare blocco flusso o mancata chiusura parziale MES.`;
+      if (esistente) {
+        if (esistente.stato === "aperta") { esistente.titolo = titolo; esistente.dati = dati; }
+      } else {
+        db.decisioni.push({
+          id, creata: new Date().toISOString().slice(0, 10), titolo, ambito: "Produzione", stato: "aperta",
+          obiettivo: `Riportare ${c.cella} sopra l'85% di performance`, vincoli: "", dati, opzioni: "",
+          decisione: "", refactoring: "", urgenza: 5, impatto: 4, auto: true
+        });
+      }
+    } else if (esistente && esistente.auto && esistente.stato === "aperta") {
+      db.decisioni = db.decisioni.filter(d => d.id !== id);
+    }
+  }
+  renderDecisioni();
 }
 
 /* ---------- report e prompt ---------- */
@@ -915,6 +1016,11 @@ function buildReport() {
   const kpiCrit = db.kpi.map(k => ({ k, s: statoKpi(k) })).filter(x => x.s.label === "Fuori target" || x.s.label === "Attenzione");
   t += `\nKPI: ${kpiCrit.length ? "" : "tutti a target (o senza valore)"}\n`;
   t += kpiCrit.map(({ k, s }) => `  • ${k.nome}: ${k.valore}${k.unita || ""} vs ${k.direzione === ">=" ? "≥" : "≤"} ${k.target}${k.unita || ""} → ${s.label}`).join("\n") + (kpiCrit.length ? "\n" : "");
+  const celleFuoriReport = ultimiPerfPerCella().filter(c => c.perf < 85 || c.perf > 115);
+  if (celleFuoriReport.length) {
+    t += `\nPERFORMANCE CELLE FUORI TARGET:\n`;
+    t += celleFuoriReport.map(c => `  • ${c.cella} fuori target: Performance registrata al ${c.perf}% (${statoPerfCella(c.perf).label})`).join("\n") + "\n";
+  }
   const oggiTasks = db.settimana.filter(x => x.giorno === giornoOggi() && !x.fatto);
   t += `\nAGENDA DI OGGI (${giornoOggi()}):\n`;
   t += oggiTasks.length ? oggiTasks.map(x => `  • ${x.cliente ? "[" + x.cliente + "] " : ""}${x.testo}`).join("\n") + "\n" : "  • niente in agenda\n";
@@ -937,7 +1043,16 @@ function comando(tipo) {
   const pianoTxt = db.settimana.filter(x => !x.fatto).map(x => `- ${x.giorno}: ${x.cliente ? "[" + x.cliente + "] " : ""}${x.testo}`).join("\n") || "- agenda vuota";
   let t = "";
   switch (tipo) {
-    case "decisione": t = buildExport(); break;
+    case "decisione": {
+      const topAuto = [...db.decisioni].filter(d => d.stato === "aperta").sort((a, b) => prioInfo(b).p - prioInfo(a).p)[0];
+      if (topAuto && topAuto.auto) {
+        const m = /al (\d+)%/.exec(topAuto.titolo);
+        t = `/performance-cella — Criticità aperta dalla Plancia.\n\n${topAuto.titolo}\n${topAuto.dati}\n\nDammi: causa più probabile del Muda e le prime 3 azioni per riportare la cella sopra target${m ? ` (attualmente ${m[1]}%)` : ""}. Se il problema è ricorrente sulla stessa cella, proponi anche il refactoring di processo.`;
+      } else {
+        t = buildExport();
+      }
+      break;
+    }
     case "lancio":
       t = `/lancio-op — Genera il piano di produzione della settimana dal CSV che allego/incollo qui sotto.\n\nApplica le regole di contesto/regole-pianificazione.md:\n- accorpa OP per famiglia o descrizione simile con date consegna entro 2 giorni (anticipando, mai ritardando)\n- massimo 2 OP OBI (ordini quadro scorta, art. 26707 e 26708) a settimana, come riempitivo\n- gli OP senza data consegna sono kanban di reintegro scorta: scadenza max 10gg dalla generazione, accorpali con la stessa logica usando quella scadenza\n\nDammi: piano per giorno, accorpamenti fatti, OBI inserite/slittate, kanban reintegrati, criticità.\n\n[ALLEGA O INCOLLA QUI IL CSV DEGLI OP]`;
       break;
@@ -1072,6 +1187,14 @@ const AZIONI = {
     renderChipsStaff();
     apriDialog("dlg-perf");
   },
+  "apri-performance-cella": el => {
+    $("form-perf").reset();
+    $("perf-risultato").innerHTML = "";
+    ultimoPerf = null;
+    $("p-cella").value = el.dataset.cella;
+    renderChipsStaff();
+    apriDialog("dlg-perf");
+  },
   "perf-claude":       () => promptPerformance(),
   "scegli-staff":      el => sceglieStaff(+el.dataset.n)
 };
@@ -1088,11 +1211,11 @@ document.addEventListener("input", e => {
   if (e.target.type === "range" && e.target.nextElementSibling && e.target.nextElementSibling.tagName === "OUTPUT") {
     e.target.nextElementSibling.value = e.target.value;
   }
-  if (e.target.id === "p-nop" || e.target.id === "p-standard") calcolaPerformance();
+  if (e.target.id === "p-nop" || e.target.id === "p-standard") calcolaPerformance({ registra: false });
 });
 $("form-wizard").addEventListener("submit", e => { e.preventDefault(); salvaDecisione(); });
 $("form-kpi").addEventListener("submit", e => { e.preventDefault(); salvaKpi(); });
-$("form-perf").addEventListener("submit", e => { e.preventDefault(); calcolaPerformance(); });
+$("form-perf").addEventListener("submit", e => { e.preventDefault(); calcolaPerformance({ registra: true }); });
 $("t-testo").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); aggiungiTask(); } });
 
 /* ---------- navigazione ---------- */
@@ -1102,6 +1225,7 @@ function vai(tab) {
   $("sec-" + tab).classList.add("active");
   $("nav-" + tab).setAttribute("aria-selected", "true");
   if (tab === "plancia") renderPlancia();
+  if (tab === "kpi") renderKpi();
 }
 
 /* ---------- init ---------- */
