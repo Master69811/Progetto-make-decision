@@ -1224,9 +1224,90 @@ function renderChat() {
   const box = $("chat-storico");
   box.innerHTML = db.chat.length
     ? db.chat.map(m => `<div class="log-item" style="align-items:flex-start"><b style="flex:none;width:60px">${m.ruolo === "utente" ? "Tu" : "Gemini"}</b><span style="white-space:pre-wrap">${esc(m.testo)}</span></div>`).join("")
-    : '<p class="hint">Fai una domanda per iniziare — es. "quali criticità devo chiudere oggi?".</p>';
+    : '<p class="hint">Fai una domanda per iniziare — es. "quali criticità devo chiudere oggi?" o "inserisci in agenda oggi: verifica ordine".</p>';
   box.scrollTop = box.scrollHeight;
 }
+
+/* ---------- azioni che la chat può eseguire davvero (Gemini tool use) ----------
+   Solo azioni additive/di aggiornamento, mai eliminazioni: un comando in linguaggio
+   naturale interpretato male non deve poter cancellare nulla. Niente round-trip
+   aggiuntivo a Gemini per la conferma: il messaggio di risposta lo costruisce
+   l'app in locale, per non consumare altre chiamate sulla quota giornaliera. */
+const STRUMENTI_CHAT = [
+  {
+    name: "aggiungi_task",
+    description: "Aggiunge un'attività all'agenda settimanale per un giorno specifico (default oggi).",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        testo: { type: "STRING", description: "Descrizione dell'attività" },
+        cliente: { type: "STRING", description: "Cliente collegato, se pertinente" },
+        giorno: { type: "STRING", description: "Giorno della settimana (Lunedì..Domenica), default oggi" }
+      },
+      required: ["testo"]
+    }
+  },
+  {
+    name: "crea_decisione",
+    description: "Apre una nuova criticità/decisione nel registro Decisioni.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        titolo: { type: "STRING", description: "Titolo della criticità" },
+        ambito: { type: "STRING", description: "Produzione, Logistica, KPI, Personale, Cliente o Altro" },
+        urgenza: { type: "INTEGER", description: "1-5, quanto presto va deciso" },
+        impatto: { type: "INTEGER", description: "1-5, impatto su consegne/costi/KPI" },
+        obiettivo: { type: "STRING" }, vincoli: { type: "STRING" }, dati: { type: "STRING" }, opzioni: { type: "STRING" }
+      },
+      required: ["titolo"]
+    }
+  },
+  {
+    name: "aggiorna_kpi",
+    description: "Aggiorna il valore attuale di un KPI già esistente nel registro (non ne crea di nuovi).",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        nome: { type: "STRING", description: "Nome del KPI esistente, es. OTD, OEE Linea 2" },
+        valore: { type: "NUMBER", description: "Nuovo valore numerico del KPI" }
+      },
+      required: ["nome", "valore"]
+    }
+  }
+];
+function aggiungiTaskDati(args) {
+  const testo = (args.testo || "").trim();
+  if (!testo) return "⚠️ Manca il testo dell'attività.";
+  const giorno = GIORNI.find(g => g.toLowerCase() === (args.giorno || "").trim().toLowerCase()) || giornoOggi();
+  const cliente = (args.cliente || "").trim();
+  db.settimana.push({ id: uid(), testo, cliente, giorno, fatto: false });
+  logEvento("Attività aggiunta via chat (" + giorno + "): " + testo);
+  salva(); renderAgenda(); renderPlancia();
+  return `✅ Aggiunto in Agenda (${giorno}): ${testo}${cliente ? " · " + cliente : ""}`;
+}
+function creaDecisioneDati(args) {
+  const titolo = (args.titolo || "").trim();
+  if (!titolo) return "⚠️ Manca il titolo della decisione.";
+  const u = Math.min(5, Math.max(1, +args.urgenza || 3)), im = Math.min(5, Math.max(1, +args.impatto || 3));
+  db.decisioni.push({
+    id: uid(), creata: new Date().toISOString().slice(0, 10), titolo,
+    ambito: args.ambito || "Produzione", stato: "aperta",
+    obiettivo: args.obiettivo || "", vincoli: args.vincoli || "", dati: args.dati || "", opzioni: args.opzioni || "",
+    decisione: "", refactoring: "", urgenza: u, impatto: im
+  });
+  logEvento("Decisione creata via chat: " + titolo);
+  salva(); renderDecisioni(); renderPlancia();
+  return `✅ Nuova decisione aperta: ${titolo} [P${u * im}]`;
+}
+function aggiornaKpiDati(args) {
+  const k = db.kpi.find(x => x.nome.trim().toLowerCase() === (args.nome || "").trim().toLowerCase());
+  if (!k) return `⚠️ Nessun KPI chiamato "${args.nome || ""}" nel registro. KPI esistenti: ${db.kpi.map(x => x.nome).join(", ") || "nessuno"}.`;
+  k.valore = args.valore;
+  salva(); renderKpi(); renderPlancia();
+  return `✅ KPI aggiornato: ${k.nome} = ${args.valore}${k.unita || ""}`;
+}
+const ESECUTORI_CHAT = { aggiungi_task: aggiungiTaskDati, crea_decisione: creaDecisioneDati, aggiorna_kpi: aggiornaKpiDati };
+
 async function inviaChat() {
   const input = $("chat-input");
   const testo = input.value.trim();
@@ -1240,11 +1321,11 @@ async function inviaChat() {
   renderChat();
   try {
     const storicoTesto = db.chat.slice(0, -2).slice(-8).map(m => (m.ruolo === "utente" ? "Andrea: " : "Assistente: ") + m.testo).join("\n");
-    const prompt = `Sei l'assistente della Decision Engine di Andrea (pianificazione e gestione produzione, Epoca SpA). Rispondi in italiano, sintetico e concreto: la risposta prima (BLUF), i dettagli dopo; linguaggio da riunione di reparto, non gergo. Non inventare mai dati: se manca un'informazione nello stato riportato sotto, dillo chiaramente invece di supporre.\n\nSTATO ATTUALE DELLA PLANCIA:\n${buildExport()}\n\nCONVERSAZIONE PRECEDENTE:\n${storicoTesto || "(nessuna)"}\n\nDOMANDA DI ANDREA:\n${testo}`;
+    const prompt = `Sei l'assistente della Decision Engine di Andrea (pianificazione e gestione produzione, Epoca SpA). Rispondi in italiano, sintetico e concreto: la risposta prima (BLUF), i dettagli dopo; linguaggio da riunione di reparto, non gergo. Non inventare mai dati: se manca un'informazione nello stato riportato sotto, dillo chiaramente invece di supporre. Se la richiesta è un'azione (aggiungere un'attività, aprire una decisione, aggiornare un KPI), usa lo strumento adatto invece di limitarti a descriverla.\n\nSTATO ATTUALE DELLA PLANCIA:\n${buildExport()}\n\nCONVERSAZIONE PRECEDENTE:\n${storicoTesto || "(nessuna)"}\n\nDOMANDA DI ANDREA:\n${testo}`;
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], tools: [{ functionDeclarations: STRUMENTI_CHAT }] })
     });
     if (!res.ok) {
       if (res.status === 429) throw new Error("Quota gratuita Gemini esaurita per oggi (il piano free ha un limite giornaliero molto basso). Riprova più tardi — si azzera a mezzanotte fuso orario USA Pacifico — oppure abilita la fatturazione sul progetto in Google AI Studio per un limite molto più alto.");
@@ -1252,7 +1333,11 @@ async function inviaChat() {
       throw new Error(`Gemini ha risposto ${res.status}${errTxt ? ": " + errTxt.slice(0, 200) : ""}`);
     }
     const data = await res.json();
-    const risposta = data?.candidates?.[0]?.content?.parts?.[0]?.text || "(risposta vuota)";
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const chiamata = parts.find(p => p.functionCall)?.functionCall;
+    const risposta = chiamata && ESECUTORI_CHAT[chiamata.name]
+      ? ESECUTORI_CHAT[chiamata.name](chiamata.args || {})
+      : (parts.find(p => p.text)?.text || "(risposta vuota)");
     db.chat[db.chat.length - 1] = { ruolo: "gemini", testo: risposta };
   } catch (e) {
     db.chat[db.chat.length - 1] = { ruolo: "gemini", testo: "❌ " + e.message };

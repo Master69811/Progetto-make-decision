@@ -34,7 +34,9 @@ Tutte e tre le pagine integrano l'API Gemini per compiti che il solo JavaScript 
 
 - **📷 Analizza screenshot MES** (dentro 📐 Performance cella): carica la foto/screenshot del log MES, Gemini legge le righe Inizio/Fine/Durata per operatore e precompila OP, Cella e Tempo Linea Totale.
 - **📊 Genera piano Excel** (Comandi a un clic): carica il CSV di estrazione ERP degli OP, Gemini applica le regole di `contesto/regole-pianificazione.md` (accorpamento, OBI, kanban) e produce un file `.xlsx` scaricabile con i fogli "Mancanti" e "Schedulazione" per ogni linea — generato in browser, nessun upload a server esterni oltre a Gemini.
-- **💬 Chiedi a Gemini** (in Plancia): chat con contesto automatico delle decisioni/KPI/agenda correnti, per domande rapide sullo stato della produzione.
+- **💬 Chiedi a Gemini** (in Plancia): chat con contesto automatico delle decisioni/KPI/agenda correnti. Non risponde solo a domande: può anche **eseguire azioni** (aggiungere un'attività all'agenda, aprire una nuova decisione, aggiornare il valore di un KPI esistente) tramite tool use — mai eliminazioni, solo aggiunte/aggiornamenti, per evitare che un comando frainteso cancelli qualcosa.
+
+Nota: i modelli Gemini vengono aggiornati/dismessi periodicamente da Google (es. `gemini-2.0-flash` non è più disponibile dal 1° giugno 2026) e la quota gratuita giornaliera è bassa: se una chiamata restituisce errore 429/quota esaurita, aspetta il reset giornaliero o abilita la fatturazione sul progetto in Google AI Studio.
 | `CLAUDE.md` | **Il cervello.** Il system prompt della Decision Engine: si attiva da solo in ogni sessione Claude aperta su questo repo — non serve più incollarlo. |
 | `contesto/profilo.md` | **La memoria fissa.** Ruolo, clienti (Mesto, Davines…), sistemi ERP/MES, KPI e vincoli ricorrenti. Compilarlo una volta = non rispiegare mai il contesto (riduzione token). |
 | `contesto/stile.md` | **La tua voce.** Guida di stile per email e messaggi: `/comunica` la usa per scrivere come te. |
