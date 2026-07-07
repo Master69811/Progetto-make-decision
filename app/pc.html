@@ -946,6 +946,7 @@ function calcolaPerformance(opts = {}) {
     salva();
     renderBadgeSidebar();
     renderKpi();
+    renderDecisioni();
     if (document.getElementById("sec-plancia").classList.contains("active")) renderPlancia();
   }
 }
@@ -1345,6 +1346,7 @@ function vai(tab) {
   $("nav-" + tab).setAttribute("aria-selected", "true");
   if (tab === "plancia") renderPlancia();
   if (tab === "kpi") renderKpi();
+  if (tab === "decisioni") renderDecisioni();
 }
 
 function renderTutto() {

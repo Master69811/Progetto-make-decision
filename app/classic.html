@@ -813,6 +813,7 @@ function calcolaPerformance(opts = {}) {
     sincronizzaPerformanceLog();
     salva();
     renderKpi();
+    renderDecisioni();
     renderPlancia();
   }
 }
@@ -1125,6 +1126,7 @@ function vai(tab) {
   $("nav-" + tab).setAttribute("aria-selected", "true");
   if (tab === "plancia") renderPlancia();
   if (tab === "kpi") renderKpi();
+  if (tab === "decisioni") renderDecisioni();
 }
 
 /* ---------- init ---------- */
